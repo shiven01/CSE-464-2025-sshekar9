@@ -1,9 +1,15 @@
 package com.shivenshekar.graphparser;
 
+import guru.nidi.graphviz.attribute.Label;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.model.MutableGraph;
+import guru.nidi.graphviz.parse.Parser;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -118,12 +124,12 @@ public class Graph {
             }
         }
 
-        // Adding all nodes to graph
+        // Adding nodes
         for (String node : nodes) {
             graph.graph.addVertex(node);
         }
 
-        // Adding all edges to graph
+        // Adding edges
         for (String[] edge : edges) {
             graph.graph.addEdge(edge[0], edge[1]);
         }
@@ -137,12 +143,12 @@ public class Graph {
      * @return true if node was added, false if it already existed
      */
     public boolean addNode(String label) {
-        // Check if node already exists
+        // Checking if node exists
         if (graph.containsVertex(label)) {
             return false;
         }
 
-        // Add the node to the graph
+        // Adding node
         return graph.addVertex(label);
     }
 
@@ -242,6 +248,48 @@ public class Graph {
             }
 
             writer.write("}");
+        }
+    }
+
+    /**
+     * Output the graph to a DOT format file
+     * @param path Path to save the DOT file
+     * @throws IOException If file couldn't be written
+     */
+    public void outputDOTGraph(String path) throws IOException {
+        // Using existing output method
+        outputGraph(path);
+    }
+
+    /**
+     * Output the graph to a graphics file
+     * @param path Path to save the graphics file
+     * @param format Format of the output file (png supported)
+     * @throws IOException If file couldn't be written
+     */
+    public void outputGraphics(String path, String format) throws IOException {
+        // Checking format support
+        format = format.toLowerCase();
+        if (!format.equals("png")) {
+            throw new IllegalArgumentException("Unsupported format: " + format + ". Only 'png' is supported.");
+        }
+
+        // Creating temporary DOT file
+        Path tempFile = Files.createTempFile("graph_", ".dot");
+        outputDOTGraph(tempFile.toString());
+
+        try {
+            // Reading DOT content
+            String dotContent = Files.readString(tempFile);
+
+            // Parsing and rendering
+            MutableGraph g = new Parser().read(dotContent);
+            Graphviz.fromGraph(g)
+                    .width(800)
+                    .render(Format.PNG)
+                    .toFile(new File(path));
+        } finally {
+            Files.deleteIfExists(tempFile);
         }
     }
 

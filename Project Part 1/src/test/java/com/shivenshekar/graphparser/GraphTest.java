@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -172,5 +173,49 @@ class GraphTest {
         assertTrue(graph.getNodes().contains("D"), "Node D should be in the graph");
         assertTrue(graph.getNodes().contains("E"), "Node E should be in the graph");
         assertTrue(graph.getEdges().contains("D -> E"), "The new edge should be in the graph");
+    }
+
+    @Test
+    void outputDOTGraph_shouldWriteCorrectDotFile(@TempDir Path tempDir) throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        Path outputPath = tempDir.resolve("output.dot");
+
+        graph.outputDOTGraph(outputPath.toString());
+
+        assertTrue(Files.exists(outputPath));
+        String content = Files.readString(outputPath);
+
+        assertTrue(content.contains("digraph G {"));
+        assertTrue(content.contains("A;"));
+        assertTrue(content.contains("B;"));
+        assertTrue(content.contains("C;"));
+        assertTrue(content.contains("A -> B;"));
+        assertTrue(content.contains("B -> C;"));
+        assertTrue(content.contains("C -> A;"));
+    }
+
+    @Test
+    void outputGraphics_shouldCreatePNGFile(@TempDir Path tempDir) throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        Path outputPath = tempDir.resolve("output.png");
+
+        graph.outputGraphics(outputPath.toString(), "png");
+
+        File pngFile = outputPath.toFile();
+        assertTrue(pngFile.exists());
+        assertTrue(pngFile.length() > 0);
+    }
+
+    @Test
+    void outputGraphics_shouldThrowExceptionForUnsupportedFormat(@TempDir Path tempDir) {
+        Graph graph = new Graph();
+        Path outputPath = tempDir.resolve("output.jpg");
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.outputGraphics(outputPath.toString(), "jpg");
+        });
+
+        assertTrue(exception.getMessage().contains("Unsupported format"));
+        assertTrue(exception.getMessage().contains("jpg"));
     }
 }
