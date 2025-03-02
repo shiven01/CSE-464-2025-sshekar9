@@ -82,4 +82,61 @@ class GraphTest {
         assertTrue(representation.contains("B -> C"));
         assertTrue(representation.contains("C -> A"));
     }
+
+    @Test
+    void addNode_shouldAddNewNodeSuccessfully() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialNodeCount = graph.getNodeCount();
+
+        boolean result = graph.addNode("D");
+
+        assertTrue(result, "addNode should return true when adding a new node");
+        assertEquals(initialNodeCount + 1, graph.getNodeCount(), "Node count should increase by 1");
+        assertTrue(graph.getNodes().contains("D"), "The new node should be in the graph");
+    }
+
+    @Test
+    void addNode_shouldReturnFalseForDuplicateNode() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialNodeCount = graph.getNodeCount();
+
+        boolean result = graph.addNode("A"); // "A" already exists in the test graph
+
+        assertFalse(result, "addNode should return false when adding a duplicate node");
+        assertEquals(initialNodeCount, graph.getNodeCount(), "Node count should remain unchanged");
+    }
+
+    @Test
+    void addNodes_shouldAddMultipleNodes() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialNodeCount = graph.getNodeCount();
+        String[] newNodes = {"D", "E", "F"};
+
+        graph.addNodes(newNodes);
+
+        assertEquals(initialNodeCount + 3, graph.getNodeCount(), "Node count should increase by 3");
+
+        Set<String> graphNodes = graph.getNodes();
+        for (String node : newNodes) {
+            assertTrue(graphNodes.contains(node), "Node " + node + " should be in the graph");
+        }
+    }
+
+    @Test
+    void addNodes_shouldSkipExistingNodes() throws IOException {
+        // Given
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialNodeCount = graph.getNodeCount();
+        String[] newNodes = {"A", "D", "B", "E"}; // "A" and "B" already exist in the test graph
+
+        // When
+        graph.addNodes(newNodes);
+
+        // Then
+        assertEquals(initialNodeCount + 2, graph.getNodeCount(), "Node count should increase by 2");
+
+        Set<String> graphNodes = graph.getNodes();
+        assertTrue(graphNodes.contains("D"), "Node D should be in the graph");
+        assertTrue(graphNodes.contains("E"), "Node E should be in the graph");
+    }
 }

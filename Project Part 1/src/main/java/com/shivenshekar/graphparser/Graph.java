@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class Graph {
     private DefaultDirectedGraph<String, DefaultEdge> graph;
-    //private Map<String, String> nodeLabels;
+    private Map<String, String> nodeLabels;
 
     public Graph() {
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
@@ -132,6 +132,31 @@ public class Graph {
     }
 
     /**
+     * Add a node to the graph
+     * @param label Label of the node to add
+     * @return true if node was added, false if it already existed
+     */
+    public boolean addNode(String label) {
+        // Checking if node already exists
+        if (graph.containsVertex(label)) {
+            return false;
+        }
+
+        // Adding node to graph
+        return graph.addVertex(label);
+    }
+
+    /**
+     * Add multiple nodes to the graph
+     * @param labels Array of node labels to add
+     */
+    public void addNodes(String[] labels) {
+        for (String label : labels) {
+            addNode(label);
+        }
+    }
+
+    /**
      * Get the number of nodes in the graph
      * @return Number of nodes
      */
@@ -181,13 +206,13 @@ public class Graph {
             writer.write("digraph G {");
             writer.newLine();
 
-            // Writing node definitions
+            // Node definitions
             for (String node : graph.vertexSet()) {
                 writer.write("    " + node + ";");
                 writer.newLine();
             }
 
-            // Writing edge definitions
+            // Edge definitions
             for (DefaultEdge edge : graph.edgeSet()) {
                 String source = graph.getEdgeSource(edge);
                 String target = graph.getEdgeTarget(edge);
