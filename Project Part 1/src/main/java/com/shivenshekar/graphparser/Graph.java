@@ -137,12 +137,12 @@ public class Graph {
      * @return true if node was added, false if it already existed
      */
     public boolean addNode(String label) {
-        // Checking if node already exists
+        // Check if node already exists
         if (graph.containsVertex(label)) {
             return false;
         }
 
-        // Adding node to graph
+        // Add the node to the graph
         return graph.addVertex(label);
     }
 
@@ -154,6 +154,27 @@ public class Graph {
         for (String label : labels) {
             addNode(label);
         }
+    }
+
+    /**
+     * Add an edge from source node to destination node
+     * @param srcLabel Label of the source node
+     * @param dstLabel Label of the destination node
+     * @return true if edge was added, false if it already existed
+     */
+    public boolean addEdge(String srcLabel, String dstLabel) {
+        // Adding nodes
+        addNode(srcLabel);
+        addNode(dstLabel);
+
+        // Checking edges
+        if (graph.containsEdge(srcLabel, dstLabel)) {
+            return false;
+        }
+
+        // Adding edge
+        graph.addEdge(srcLabel, dstLabel);
+        return true;
     }
 
     /**
@@ -206,13 +227,13 @@ public class Graph {
             writer.write("digraph G {");
             writer.newLine();
 
-            // Node definitions
+            // Writing nodes
             for (String node : graph.vertexSet()) {
                 writer.write("    " + node + ";");
                 writer.newLine();
             }
 
-            // Edge definitions
+            // Writing edges
             for (DefaultEdge edge : graph.edgeSet()) {
                 String source = graph.getEdgeSource(edge);
                 String target = graph.getEdgeTarget(edge);

@@ -33,10 +33,8 @@ class GraphTest {
 
     @Test
     void parseGraph_shouldCreateGraphCorrectly() throws IOException {
-        // When
         Graph graph = Graph.parseGraph(testDotFile.toString());
 
-        // Then
         assertEquals(3, graph.getNodeCount());
         assertEquals(3, graph.getEdgeCount());
 
@@ -124,19 +122,55 @@ class GraphTest {
 
     @Test
     void addNodes_shouldSkipExistingNodes() throws IOException {
-        // Given
         Graph graph = Graph.parseGraph(testDotFile.toString());
         int initialNodeCount = graph.getNodeCount();
         String[] newNodes = {"A", "D", "B", "E"}; // "A" and "B" already exist in the test graph
 
-        // When
         graph.addNodes(newNodes);
 
-        // Then
         assertEquals(initialNodeCount + 2, graph.getNodeCount(), "Node count should increase by 2");
 
         Set<String> graphNodes = graph.getNodes();
         assertTrue(graphNodes.contains("D"), "Node D should be in the graph");
         assertTrue(graphNodes.contains("E"), "Node E should be in the graph");
+    }
+
+    @Test
+    void addEdge_shouldAddNewEdgeSuccessfully() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialEdgeCount = graph.getEdgeCount();
+
+        boolean result = graph.addEdge("A", "C"); // A and C exist but edge A->C doesn't
+
+        assertTrue(result, "addEdge should return true when adding a new edge");
+        assertEquals(initialEdgeCount + 1, graph.getEdgeCount(), "Edge count should increase by 1");
+        assertTrue(graph.getEdges().contains("A -> C"), "The new edge should be in the graph");
+    }
+
+    @Test
+    void addEdge_shouldReturnFalseForDuplicateEdge() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialEdgeCount = graph.getEdgeCount();
+
+        boolean result = graph.addEdge("A", "B"); // A->B already exists in the test graph
+
+        assertFalse(result, "addEdge should return false when adding a duplicate edge");
+        assertEquals(initialEdgeCount, graph.getEdgeCount(), "Edge count should remain unchanged");
+    }
+
+    @Test
+    void addEdge_shouldCreateNodesIfNeeded() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialNodeCount = graph.getNodeCount();
+        int initialEdgeCount = graph.getEdgeCount();
+
+        boolean result = graph.addEdge("D", "E"); // Both D and E don't exist yet
+
+        assertTrue(result, "addEdge should return true when adding a new edge with new nodes");
+        assertEquals(initialNodeCount + 2, graph.getNodeCount(), "Node count should increase by 2");
+        assertEquals(initialEdgeCount + 1, graph.getEdgeCount(), "Edge count should increase by 1");
+        assertTrue(graph.getNodes().contains("D"), "Node D should be in the graph");
+        assertTrue(graph.getNodes().contains("E"), "Node E should be in the graph");
+        assertTrue(graph.getEdges().contains("D -> E"), "The new edge should be in the graph");
     }
 }
