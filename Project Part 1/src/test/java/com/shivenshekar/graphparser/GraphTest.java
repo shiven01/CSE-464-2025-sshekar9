@@ -32,6 +32,10 @@ class GraphTest {
         Files.writeString(testDotFile, dotContent);
     }
 
+    //
+    // Feature 1: Parse a DOT Graph File
+    //
+
     @Test
     void parseGraph_shouldCreateGraphCorrectly() throws IOException {
         Graph graph = Graph.parseGraph(testDotFile.toString());
@@ -48,6 +52,19 @@ class GraphTest {
         assertTrue(edges.contains("A -> B"));
         assertTrue(edges.contains("B -> C"));
         assertTrue(edges.contains("C -> A"));
+    }
+
+    @Test
+    void toString_shouldReturnCorrectRepresentation() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        String representation = graph.toString();
+
+        assertTrue(representation.contains("Number of nodes: 3"));
+        assertTrue(representation.contains("Number of edges: 3"));
+        assertTrue(representation.contains("A -> B"));
+        assertTrue(representation.contains("B -> C"));
+        assertTrue(representation.contains("C -> A"));
     }
 
     @Test
@@ -69,18 +86,9 @@ class GraphTest {
         assertTrue(content.contains("C -> A;"));
     }
 
-    @Test
-    void toString_shouldReturnCorrectRepresentation() throws IOException {
-        Graph graph = Graph.parseGraph(testDotFile.toString());
-
-        String representation = graph.toString();
-
-        assertTrue(representation.contains("Number of nodes: 3"));
-        assertTrue(representation.contains("Number of edges: 3"));
-        assertTrue(representation.contains("A -> B"));
-        assertTrue(representation.contains("B -> C"));
-        assertTrue(representation.contains("C -> A"));
-    }
+    //
+    // Feature 2: Adding Nodes
+    //
 
     @Test
     void addNode_shouldAddNewNodeSuccessfully() throws IOException {
@@ -136,6 +144,10 @@ class GraphTest {
         assertTrue(graphNodes.contains("E"), "Node E should be in the graph");
     }
 
+    //
+    // Feature 3: Adding Edges
+    //
+
     @Test
     void addEdge_shouldAddNewEdgeSuccessfully() throws IOException {
         Graph graph = Graph.parseGraph(testDotFile.toString());
@@ -174,6 +186,10 @@ class GraphTest {
         assertTrue(graph.getNodes().contains("E"), "Node E should be in the graph");
         assertTrue(graph.getEdges().contains("D -> E"), "The new edge should be in the graph");
     }
+
+    //
+    // Feature 4: Output the Graph
+    //
 
     @Test
     void outputDOTGraph_shouldWriteCorrectDotFile(@TempDir Path tempDir) throws IOException {
