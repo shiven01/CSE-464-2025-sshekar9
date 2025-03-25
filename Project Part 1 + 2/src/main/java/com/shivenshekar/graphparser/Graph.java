@@ -30,6 +30,7 @@ public class Graph {
 
     /**
      * Parse a DOT graph file and create a graph
+     * 
      * @param filepath Path to the DOT file
      * @return Graph instance containing the parsed graph
      * @throws IOException If file not found or couldn't be read
@@ -92,7 +93,7 @@ public class Graph {
                             target = target.substring(0, target.length() - 1).trim();
                         }
 
-                        edges.add(new String[]{source, target});
+                        edges.add(new String[] { source, target });
 
                         // Adding nodes
                         if (!nodes.contains(source)) {
@@ -104,7 +105,8 @@ public class Graph {
                     }
                 }
                 // Handle node definitions
-                else if (!line.contains("=") && !line.contains("subgraph") && !line.contains("graph") && !line.contains("digraph")) {
+                else if (!line.contains("=") && !line.contains("subgraph") && !line.contains("graph")
+                        && !line.contains("digraph")) {
                     String node = line;
 
                     // Removing attributes
@@ -139,6 +141,7 @@ public class Graph {
 
     /**
      * Add a node to the graph
+     * 
      * @param label Label of the node to add
      * @return true if node was added, false if it already existed
      */
@@ -154,6 +157,7 @@ public class Graph {
 
     /**
      * Add multiple nodes to the graph
+     * 
      * @param labels Array of node labels to add
      */
     public void addNodes(String[] labels) {
@@ -164,6 +168,7 @@ public class Graph {
 
     /**
      * Add an edge from source node to destination node
+     * 
      * @param srcLabel Label of the source node
      * @param dstLabel Label of the destination node
      * @return true if edge was added, false if it already existed
@@ -185,6 +190,7 @@ public class Graph {
 
     /**
      * Get the number of nodes in the graph
+     * 
      * @return Number of nodes
      */
     public int getNodeCount() {
@@ -193,6 +199,7 @@ public class Graph {
 
     /**
      * Get the number of edges in the graph
+     * 
      * @return Number of edges
      */
     public int getEdgeCount() {
@@ -201,6 +208,7 @@ public class Graph {
 
     /**
      * Get all node labels in the graph
+     * 
      * @return Set of node labels
      */
     public Set<String> getNodes() {
@@ -209,6 +217,7 @@ public class Graph {
 
     /**
      * Get a string representation of all edges in the graph
+     * 
      * @return List of edge strings (e.g., "a -> b")
      */
     public List<String> getEdges() {
@@ -225,6 +234,7 @@ public class Graph {
 
     /**
      * Output the graph to a DOT format file
+     * 
      * @param filepath Path to save the DOT file
      * @throws IOException If file couldn't be written
      */
@@ -253,6 +263,7 @@ public class Graph {
 
     /**
      * Output the graph to a DOT format file
+     * 
      * @param path Path to save the DOT file
      * @throws IOException If file couldn't be written
      */
@@ -263,7 +274,8 @@ public class Graph {
 
     /**
      * Output the graph to a graphics file
-     * @param path Path to save the graphics file
+     * 
+     * @param path   Path to save the graphics file
      * @param format Format of the output file (png supported)
      * @throws IOException If file couldn't be written
      */
@@ -314,60 +326,131 @@ public class Graph {
     }
 
     /**
- * Remove a node from the graph
- * @param label Label of the node to remove
- * @return true if node was removed
- * @throws IllegalArgumentException if the node doesn't exist or has edges connected to it
- */
-public boolean removeNode(String label) {
-    // Check if node exists
-    if (!graph.containsVertex(label)) {
-        throw new IllegalArgumentException("Node doesn't exist: " + label);
-    }
-    
-    // Check if node has any edges
-    if (graph.inDegreeOf(label) > 0 || graph.outDegreeOf(label) > 0) {
-        throw new IllegalArgumentException("Cannot remove node with connected edges: " + label);
-    }
-    
-    // Remove node
-    return graph.removeVertex(label);
-}
+     * Remove a node from the graph
+     * 
+     * @param label Label of the node to remove
+     * @return true if node was removed
+     * @throws IllegalArgumentException if the node doesn't exist or has edges
+     *                                  connected to it
+     */
+    public boolean removeNode(String label) {
+        // Check if node exists
+        if (!graph.containsVertex(label)) {
+            throw new IllegalArgumentException("Node doesn't exist: " + label);
+        }
 
-/**
- * Remove multiple nodes from the graph
- * @param labels Array of node labels to remove
- * @throws IllegalArgumentException if any node doesn't exist or has edges connected to it
- */
-public void removeNodes(String[] labels) {
-    for (String label : labels) {
-        removeNode(label);
-    }
-}
+        // Check if node has any edges
+        if (graph.inDegreeOf(label) > 0 || graph.outDegreeOf(label) > 0) {
+            throw new IllegalArgumentException("Cannot remove node with connected edges: " + label);
+        }
 
-/**
- * Remove an edge from the graph
- * @param srcLabel Label of the source node
- * @param dstLabel Label of the destination node
- * @return true if edge was removed
- * @throws IllegalArgumentException if either node doesn't exist or the edge doesn't exist
- */
-public boolean removeEdge(String srcLabel, String dstLabel) {
-    // Check if nodes exist
-    if (!graph.containsVertex(srcLabel)) {
-        throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
+        // Remove node
+        return graph.removeVertex(label);
     }
-    if (!graph.containsVertex(dstLabel)) {
-        throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
+
+    /**
+     * Remove multiple nodes from the graph
+     * 
+     * @param labels Array of node labels to remove
+     * @throws IllegalArgumentException if any node doesn't exist or has edges
+     *                                  connected to it
+     */
+    public void removeNodes(String[] labels) {
+        for (String label : labels) {
+            removeNode(label);
+        }
     }
-    
-    // Check if edge exists
-    if (!graph.containsEdge(srcLabel, dstLabel)) {
-        throw new IllegalArgumentException("Edge doesn't exist: " + srcLabel + " -> " + dstLabel);
+
+    /**
+     * Remove an edge from the graph
+     * 
+     * @param srcLabel Label of the source node
+     * @param dstLabel Label of the destination node
+     * @return true if edge was removed
+     * @throws IllegalArgumentException if either node doesn't exist or the edge
+     *                                  doesn't exist
+     */
+    public boolean removeEdge(String srcLabel, String dstLabel) {
+        // Check if nodes exist
+        if (!graph.containsVertex(srcLabel)) {
+            throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
+        }
+        if (!graph.containsVertex(dstLabel)) {
+            throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
+        }
+
+        // Check if edge exists
+        if (!graph.containsEdge(srcLabel, dstLabel)) {
+            throw new IllegalArgumentException("Edge doesn't exist: " + srcLabel + " -> " + dstLabel);
+        }
+
+        // Remove edge
+        DefaultEdge edge = graph.getEdge(srcLabel, dstLabel);
+        return graph.removeEdge(edge);
     }
-    
-    // Remove edge
-    DefaultEdge edge = graph.getEdge(srcLabel, dstLabel);
-    return graph.removeEdge(edge);
-}
+
+    /**
+     * Search for a path from source node to destination node using BFS
+     * 
+     * @param srcLabel Label of the source node
+     * @param dstLabel Label of the destination node
+     * @return A Path object if a path exists, null otherwise
+     * @throws IllegalArgumentException if either node doesn't exist
+     */
+    public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel) {
+        // Check if nodes exist
+        if (!graph.containsVertex(srcLabel)) {
+            throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
+        }
+        if (!graph.containsVertex(dstLabel)) {
+            throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
+        }
+
+        // If source and destination are the same, return a path with just that node
+        if (srcLabel.equals(dstLabel)) {
+            com.shivenshekar.graphparser.Path path = new com.shivenshekar.graphparser.Path();
+            path.addNode(srcLabel);
+            return path;
+        }
+
+        // Set to track visited nodes
+        java.util.Set<String> visited = new java.util.HashSet<>();
+        // Queue to track nodes to visit
+        java.util.Queue<com.shivenshekar.graphparser.Path> queue = new java.util.LinkedList<>();
+
+        // Initialize path with source node
+        com.shivenshekar.graphparser.Path initialPath = new com.shivenshekar.graphparser.Path();
+        initialPath.addNode(srcLabel);
+        queue.add(initialPath);
+        visited.add(srcLabel);
+
+        // BFS traversal
+        while (!queue.isEmpty()) {
+            com.shivenshekar.graphparser.Path currentPath = queue.poll();
+            String currentNode = currentPath.getEndNode();
+
+            // Get neighbors (outgoing edges)
+            for (DefaultEdge edge : graph.outgoingEdgesOf(currentNode)) {
+                String neighbor = graph.getEdgeTarget(edge);
+
+                // If we found the destination, return the path
+                if (neighbor.equals(dstLabel)) {
+                    com.shivenshekar.graphparser.Path foundPath = currentPath.copy();
+                    foundPath.addNode(neighbor);
+                    return foundPath;
+                }
+
+                // If neighbor hasn't been visited, add it to the queue
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    com.shivenshekar.graphparser.Path newPath = currentPath.copy();
+                    newPath.addNode(neighbor);
+                    queue.add(newPath);
+                }
+            }
+        }
+
+        // No path found
+        return null;
+    }
 }

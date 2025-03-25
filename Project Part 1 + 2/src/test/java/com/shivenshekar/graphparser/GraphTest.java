@@ -20,15 +20,14 @@ class GraphTest {
     void setup(@TempDir Path tempDir) throws IOException {
         // Creating test DOT file
         testDotFile = tempDir.resolve("test.dot");
-        String dotContent =
-                "digraph G {\n" +
-                        "    A;\n" +
-                        "    B;\n" +
-                        "    C;\n" +
-                        "    A -> B;\n" +
-                        "    B -> C;\n" +
-                        "    C -> A;\n" +
-                        "}";
+        String dotContent = "digraph G {\n" +
+                "    A;\n" +
+                "    B;\n" +
+                "    C;\n" +
+                "    A -> B;\n" +
+                "    B -> C;\n" +
+                "    C -> A;\n" +
+                "}";
         Files.writeString(testDotFile, dotContent);
     }
 
@@ -117,7 +116,7 @@ class GraphTest {
     void addNodes_shouldAddMultipleNodes() throws IOException {
         Graph graph = Graph.parseGraph(testDotFile.toString());
         int initialNodeCount = graph.getNodeCount();
-        String[] newNodes = {"D", "E", "F"};
+        String[] newNodes = { "D", "E", "F" };
 
         graph.addNodes(newNodes);
 
@@ -133,7 +132,7 @@ class GraphTest {
     void addNodes_shouldSkipExistingNodes() throws IOException {
         Graph graph = Graph.parseGraph(testDotFile.toString());
         int initialNodeCount = graph.getNodeCount();
-        String[] newNodes = {"A", "D", "B", "E"}; // "A" and "B" already exist in the test graph
+        String[] newNodes = { "A", "D", "B", "E" }; // "A" and "B" already exist in the test graph
 
         graph.addNodes(newNodes);
 
@@ -236,120 +235,209 @@ class GraphTest {
     }
 
     //
-// Feature 5: Removing Nodes and Edges
-//
+    // Feature 5: Removing Nodes and Edges
+    //
 
-// Scenario 1: some nodes and some edges are correctly removed.
+    // Scenario 1: some nodes and some edges are correctly removed.
 
-@Test
-void removeNode_shouldRemoveNodeSuccessfully() throws IOException {
-    // Create a new graph with an isolated node
-    Graph graph = new Graph();
-    graph.addNode("X");
-    int initialNodeCount = graph.getNodeCount();
+    @Test
+    void removeNode_shouldRemoveNodeSuccessfully() throws IOException {
+        // Create a new graph with an isolated node
+        Graph graph = new Graph();
+        graph.addNode("X");
+        int initialNodeCount = graph.getNodeCount();
 
-    boolean result = graph.removeNode("X");
+        boolean result = graph.removeNode("X");
 
-    assertTrue(result, "removeNode should return true when removing an existing node");
-    assertEquals(initialNodeCount - 1, graph.getNodeCount(), "Node count should decrease by 1");
-    assertFalse(graph.getNodes().contains("X"), "The node should be removed from the graph");
-}
+        assertTrue(result, "removeNode should return true when removing an existing node");
+        assertEquals(initialNodeCount - 1, graph.getNodeCount(), "Node count should decrease by 1");
+        assertFalse(graph.getNodes().contains("X"), "The node should be removed from the graph");
+    }
 
-@Test
-void removeNodes_shouldRemoveMultipleNodes() throws IOException {
-    // Create a new graph with isolated nodes
-    Graph graph = new Graph();
-    graph.addNodes(new String[]{"X", "Y", "Z"});
-    int initialNodeCount = graph.getNodeCount();
-    
-    graph.removeNodes(new String[]{"X", "Y"});
-    
-    assertEquals(initialNodeCount - 2, graph.getNodeCount(), "Node count should decrease by 2");
-    assertFalse(graph.getNodes().contains("X"), "Node X should be removed from the graph");
-    assertFalse(graph.getNodes().contains("Y"), "Node Y should be removed from the graph");
-    assertTrue(graph.getNodes().contains("Z"), "Node Z should still be in the graph");
-}
+    @Test
+    void removeNodes_shouldRemoveMultipleNodes() throws IOException {
+        // Create a new graph with isolated nodes
+        Graph graph = new Graph();
+        graph.addNodes(new String[] { "X", "Y", "Z" });
+        int initialNodeCount = graph.getNodeCount();
 
-@Test
-void removeEdge_shouldRemoveEdgeSuccessfully() throws IOException {
-    Graph graph = Graph.parseGraph(testDotFile.toString());
-    int initialEdgeCount = graph.getEdgeCount();
-    
-    boolean result = graph.removeEdge("A", "B"); // A->B exists in the test graph
-    
-    assertTrue(result, "removeEdge should return true when removing an existing edge");
-    assertEquals(initialEdgeCount - 1, graph.getEdgeCount(), "Edge count should decrease by 1");
-    assertFalse(graph.getEdges().contains("A -> B"), "The edge should be removed from the graph");
-}
+        graph.removeNodes(new String[] { "X", "Y" });
 
-// Scenario 2: removing nodes that do not exist in the graph will cause exceptions.
+        assertEquals(initialNodeCount - 2, graph.getNodeCount(), "Node count should decrease by 2");
+        assertFalse(graph.getNodes().contains("X"), "Node X should be removed from the graph");
+        assertFalse(graph.getNodes().contains("Y"), "Node Y should be removed from the graph");
+        assertTrue(graph.getNodes().contains("Z"), "Node Z should still be in the graph");
+    }
 
-@Test
-void removeNode_shouldThrowExceptionForNonExistentNode() {
-    Graph graph = new Graph();
-    
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        graph.removeNode("NonExistent");
-    });
-    
-    assertTrue(exception.getMessage().contains("Node doesn't exist"));
-}
+    @Test
+    void removeEdge_shouldRemoveEdgeSuccessfully() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+        int initialEdgeCount = graph.getEdgeCount();
 
-@Test
-void removeNodes_shouldThrowExceptionForNonExistentNodes() {
-    Graph graph = new Graph();
-    graph.addNode("A");
-    
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        graph.removeNodes(new String[]{"A", "NonExistent"});
-    });
-    
-    assertTrue(exception.getMessage().contains("Node doesn't exist"));
-}
+        boolean result = graph.removeEdge("A", "B"); // A->B exists in the test graph
 
-@Test
-void removeNode_shouldThrowExceptionForNodeWithEdges() throws IOException {
-    Graph graph = Graph.parseGraph(testDotFile.toString());
-    
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        graph.removeNode("A"); // "A" has edges in the test graph
-    });
-    
-    assertTrue(exception.getMessage().contains("Cannot remove node with connected edges"));
-}
+        assertTrue(result, "removeEdge should return true when removing an existing edge");
+        assertEquals(initialEdgeCount - 1, graph.getEdgeCount(), "Edge count should decrease by 1");
+        assertFalse(graph.getEdges().contains("A -> B"), "The edge should be removed from the graph");
+    }
 
-// Scenario 3: removing edges that do not exist in the graph will cause exceptions.
+    // Scenario 2: removing nodes that do not exist in the graph will cause
+    // exceptions.
 
-@Test
-void removeEdge_shouldThrowExceptionForNonExistentEdge() throws IOException {
-    Graph graph = Graph.parseGraph(testDotFile.toString());
-    
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        graph.removeEdge("A", "C"); // A->C doesn't exist in the test graph
-    });
-    
-    assertTrue(exception.getMessage().contains("Edge doesn't exist"));
-}
+    @Test
+    void removeNode_shouldThrowExceptionForNonExistentNode() {
+        Graph graph = new Graph();
 
-@Test
-void removeEdge_shouldThrowExceptionForNonExistentSourceNode() throws IOException {
-    Graph graph = Graph.parseGraph(testDotFile.toString());
-    
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        graph.removeEdge("NonExistent", "A");
-    });
-    
-    assertTrue(exception.getMessage().contains("Source node doesn't exist"));
-}
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.removeNode("NonExistent");
+        });
 
-@Test
-void removeEdge_shouldThrowExceptionForNonExistentDestinationNode() throws IOException {
-    Graph graph = Graph.parseGraph(testDotFile.toString());
-    
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        graph.removeEdge("A", "NonExistent");
-    });
-    
-    assertTrue(exception.getMessage().contains("Destination node doesn't exist"));
-}
+        assertTrue(exception.getMessage().contains("Node doesn't exist"));
+    }
+
+    @Test
+    void removeNodes_shouldThrowExceptionForNonExistentNodes() {
+        Graph graph = new Graph();
+        graph.addNode("A");
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.removeNodes(new String[] { "A", "NonExistent" });
+        });
+
+        assertTrue(exception.getMessage().contains("Node doesn't exist"));
+    }
+
+    @Test
+    void removeNode_shouldThrowExceptionForNodeWithEdges() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.removeNode("A"); // "A" has edges in the test graph
+        });
+
+        assertTrue(exception.getMessage().contains("Cannot remove node with connected edges"));
+    }
+
+    // Scenario 3: removing edges that do not exist in the graph will cause
+    // exceptions.
+
+    @Test
+    void removeEdge_shouldThrowExceptionForNonExistentEdge() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.removeEdge("A", "C"); // A->C doesn't exist in the test graph
+        });
+
+        assertTrue(exception.getMessage().contains("Edge doesn't exist"));
+    }
+
+    @Test
+    void removeEdge_shouldThrowExceptionForNonExistentSourceNode() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.removeEdge("NonExistent", "A");
+        });
+
+        assertTrue(exception.getMessage().contains("Source node doesn't exist"));
+    }
+
+    @Test
+    void removeEdge_shouldThrowExceptionForNonExistentDestinationNode() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.removeEdge("A", "NonExistent");
+        });
+
+        assertTrue(exception.getMessage().contains("Destination node doesn't exist"));
+    }
+
+    //
+    // Feature 7: Graph Search with BFS
+    //
+
+    @Test
+    void graphSearch_shouldFindPathUsingBFS(@TempDir Path tempDirSearch) throws IOException {
+        // Create a test graph with a known path
+        Path searchDotFile = tempDirSearch.resolve("search_test.dot");
+        String dotContent = "digraph G {\n" +
+                "    A;\n" +
+                "    B;\n" +
+                "    C;\n" +
+                "    D;\n" +
+                "    E;\n" +
+                "    F;\n" +
+                "    A -> B;\n" +
+                "    B -> C;\n" +
+                "    C -> D;\n" +
+                "    A -> E;\n" +
+                "    E -> F;\n" +
+                "    F -> D;\n" +
+                "}";
+        Files.writeString(searchDotFile, dotContent);
+
+        Graph graph = Graph.parseGraph(searchDotFile.toString());
+
+        com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "D");
+
+        assertNotNull(path);
+        assertFalse(path.isEmpty());
+        assertEquals("A", path.getStartNode());
+        assertEquals("D", path.getEndNode());
+
+        // BFS should find the shortest path which is A -> E -> F -> D (3 edges)
+        // or A -> B -> C -> D (3 edges)
+        // Both are valid shortest paths with BFS
+        assertEquals(3, path.getLength());
+    }
+
+    @Test
+    void graphSearch_shouldReturnPathWithSingleNodeForSameStartAndEnd() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "A");
+
+        assertNotNull(path);
+        assertFalse(path.isEmpty());
+        assertEquals(1, path.getNodes().size());
+        assertEquals("A", path.getStartNode());
+        assertEquals("A", path.getEndNode());
+        assertEquals(0, path.getLength());
+    }
+
+    @Test
+    void graphSearch_shouldReturnNullForUnreachableNode() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        // Add an isolated node
+        graph.addNode("Z");
+
+        com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "Z");
+
+        assertNull(path);
+    }
+
+    @Test
+    void graphSearch_shouldThrowExceptionForNonExistentSourceNode() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.graphSearch("X", "A");
+        });
+
+        assertTrue(exception.getMessage().contains("Source node doesn't exist"));
+    }
+
+    @Test
+    void graphSearch_shouldThrowExceptionForNonExistentDestinationNode() throws IOException {
+        Graph graph = Graph.parseGraph(testDotFile.toString());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            graph.graphSearch("A", "X");
+        });
+
+        assertTrue(exception.getMessage().contains("Destination node doesn't exist"));
+    }
 }
