@@ -1,6 +1,5 @@
 package com.shivenshekar.graphparser;
 
-import guru.nidi.graphviz.attribute.Label;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.MutableGraph;
@@ -390,84 +389,159 @@ public class Graph {
     }
 
     /**
-     * Search for a path from source node to destination node using DFS
-     * 
-     * @param srcLabel Label of the source node
-     * @param dstLabel Label of the destination node
-     * @return A Path object if a path exists, null otherwise
-     * @throws IllegalArgumentException if either node doesn't exist
-     */
-    public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel) {
-        // Check if nodes exist
-        if (!graph.containsVertex(srcLabel)) {
-            throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
-        }
-        if (!graph.containsVertex(dstLabel)) {
-            throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
-        }
-
-        // If source and destination are the same, return a path with just that node
-        if (srcLabel.equals(dstLabel)) {
-            com.shivenshekar.graphparser.Path path = new com.shivenshekar.graphparser.Path();
-            path.addNode(srcLabel);
-            return path;
-        }
-
-        // Set to track visited nodes
-        java.util.Set<String> visited = new java.util.HashSet<>();
-
-        // Start DFS from source node
+ * Search for a path from source node to destination node
+ * @param srcLabel Label of the source node
+ * @param dstLabel Label of the destination node
+ * @param algo The algorithm to use (BFS or DFS)
+ * @return A Path object if a path exists, null otherwise
+ * @throws IllegalArgumentException if either node doesn't exist or the algorithm is not supported
+ */
+public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel, Algorithm algo) {
+    // Check if nodes exist
+    if (!graph.containsVertex(srcLabel)) {
+        throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
+    }
+    if (!graph.containsVertex(dstLabel)) {
+        throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
+    }
+    
+    // If source and destination are the same, return a path with just that node
+    if (srcLabel.equals(dstLabel)) {
         com.shivenshekar.graphparser.Path path = new com.shivenshekar.graphparser.Path();
         path.addNode(srcLabel);
-
-        if (dfsRecursive(srcLabel, dstLabel, visited, path)) {
-            return path;
-        } else {
-            return null;
-        }
+        return path;
     }
+    
+    // Choose algorithm based on parameter
+    switch (algo) {
+        case BFS:
+            return bfsSearch(srcLabel, dstLabel);
+        case DFS:
+            return dfsSearch(srcLabel, dstLabel);
+        default:
+            throw new IllegalArgumentException("Unsupported algorithm: " + algo);
+    }
+}
 
-    /**
-     * Recursive helper method for DFS
-     * 
-     * @param currentNode Current node being visited
-     * @param dstLabel    Destination node we're looking for
-     * @param visited     Set of visited nodes
-     * @param path        Current path being explored
-     * @return true if a path to destination is found, false otherwise
-     */
-    private boolean dfsRecursive(String currentNode, String dstLabel, java.util.Set<String> visited,
-            com.shivenshekar.graphparser.Path path) {
-        // Mark current node as visited
-        visited.add(currentNode);
+/**
+ * Search for a path from source node to destination node using default algorithm (BFS)
+ * @param srcLabel Label of the source node
+ * @param dstLabel Label of the destination node
+ * @return A Path object if a path exists, null otherwise
+ * @throws IllegalArgumentException if either node doesn't exist
+ */
+public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel) {
+    // Call the three-parameter version with BFS as the default algorithm
+    return graphSearch(srcLabel, dstLabel, Algorithm.BFS);
+}
 
-        // If we reached the destination, return true
-        if (currentNode.equals(dstLabel)) {
-            return true;
-        }
-
-        // Visit all neighbors
+/**
+ * Perform a Breadth-First Search for a path
+ * @param srcLabel Label of the source node
+ * @param dstLabel Label of the destination node
+ * @return A Path object if a path exists, null otherwise
+ */
+private com.shivenshekar.graphparser.Path bfsSearch(String srcLabel, String dstLabel) {
+    // Set to track visited nodes
+    java.util.Set<String> visited = new java.util.HashSet<>();
+    // Queue to track nodes to visit
+    java.util.Queue<com.shivenshekar.graphparser.Path> queue = new java.util.LinkedList<>();
+    
+    // Initialize path with source node
+    com.shivenshekar.graphparser.Path initialPath = new com.shivenshekar.graphparser.Path();
+    initialPath.addNode(srcLabel);
+    queue.add(initialPath);
+    visited.add(srcLabel);
+    
+    // BFS traversal
+    while (!queue.isEmpty()) {
+        com.shivenshekar.graphparser.Path currentPath = queue.poll();
+        String currentNode = currentPath.getEndNode();
+        
+        // Get neighbors (outgoing edges)
         for (DefaultEdge edge : graph.outgoingEdgesOf(currentNode)) {
             String neighbor = graph.getEdgeTarget(edge);
-
+            
+            // If we found the destination, return the path
+            if (neighbor.equals(dstLabel)) {
+                com.shivenshekar.graphparser.Path foundPath = currentPath.copy();
+                foundPath.addNode(neighbor);
+                return foundPath;
+            }
+            
+            // If neighbor hasn't been visited, add it to the queue
             if (!visited.contains(neighbor)) {
-                // Add neighbor to path
-                path.addNode(neighbor);
-
-                // Recursively visit neighbor
-                if (dfsRecursive(neighbor, dstLabel, visited, path)) {
-                    return true;
-                }
-
-                // If this path doesn't lead to destination, remove the neighbor from path
-                // (backtrack)
-                java.util.List<String> nodes = new java.util.ArrayList<>(path.getNodes());
-                nodes.remove(nodes.size() - 1);
-                path = new com.shivenshekar.graphparser.Path(nodes);
+                visited.add(neighbor);
+                com.shivenshekar.graphparser.Path newPath = currentPath.copy();
+                newPath.addNode(neighbor);
+                queue.add(newPath);
             }
         }
-
-        // No path found from this node
-        return false;
     }
+    
+    // No path found
+    return null;
+}
+
+/**
+ * Perform a Depth-First Search for a path
+ * @param srcLabel Label of the source node
+ * @param dstLabel Label of the destination node
+ * @return A Path object if a path exists, null otherwise
+ */
+private com.shivenshekar.graphparser.Path dfsSearch(String srcLabel, String dstLabel) {
+    // Set to track visited nodes
+    java.util.Set<String> visited = new java.util.HashSet<>();
+    
+    // Start DFS from source node
+    com.shivenshekar.graphparser.Path path = new com.shivenshekar.graphparser.Path();
+    path.addNode(srcLabel);
+    
+    if (dfsRecursive(srcLabel, dstLabel, visited, path)) {
+        return path;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Recursive helper method for DFS
+ * @param currentNode Current node being visited
+ * @param dstLabel Destination node we're looking for
+ * @param visited Set of visited nodes
+ * @param path Current path being explored
+ * @return true if a path to destination is found, false otherwise
+ */
+private boolean dfsRecursive(String currentNode, String dstLabel, java.util.Set<String> visited, com.shivenshekar.graphparser.Path path) {
+    // Mark current node as visited
+    visited.add(currentNode);
+    
+    // If we reached the destination, return true
+    if (currentNode.equals(dstLabel)) {
+        return true;
+    }
+    
+    // Visit all neighbors
+    for (DefaultEdge edge : graph.outgoingEdgesOf(currentNode)) {
+        String neighbor = graph.getEdgeTarget(edge);
+        
+        if (!visited.contains(neighbor)) {
+            // Add neighbor to path
+            path.addNode(neighbor);
+            
+            // Recursively visit neighbor
+            if (dfsRecursive(neighbor, dstLabel, visited, path)) {
+                return true;
+            }
+            
+            // If this path doesn't lead to destination, remove the neighbor from path (backtrack)
+            java.util.List<String> nodes = new java.util.ArrayList<>(path.getNodes());
+            nodes.remove(nodes.size() - 1);
+            path = new com.shivenshekar.graphparser.Path(nodes);
+        }
+    }
+    
+    // No path found from this node
+    return false;
+}
 }

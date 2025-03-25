@@ -551,4 +551,127 @@ void graphSearch_DFS_shouldHandleCyclicGraphs(@TempDir Path tempDirCyclic) throw
     assertEquals("A", dfsPath.getStartNode());
     assertEquals("C", dfsPath.getEndNode());
 }
+
+//
+// Feature 9: Unified Graph Search with Algorithm Parameter
+//
+
+@Test
+void graphSearch_shouldUseSpecifiedAlgorithm_BFS(@TempDir Path tempDirSearch) throws IOException {
+    // Create a test graph with a known path
+    Path searchDotFile = tempDirSearch.resolve("search_test.dot");
+    String dotContent =
+            "digraph G {\n" +
+                    "    A;\n" +
+                    "    B;\n" +
+                    "    C;\n" +
+                    "    D;\n" +
+                    "    E;\n" +
+                    "    F;\n" +
+                    "    A -> B;\n" +
+                    "    B -> C;\n" +
+                    "    C -> D;\n" +
+                    "    A -> E;\n" +
+                    "    E -> F;\n" +
+                    "    F -> D;\n" +
+                    "}";
+    Files.writeString(searchDotFile, dotContent);
+    
+    Graph graph = Graph.parseGraph(searchDotFile.toString());
+    
+    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "D", Algorithm.BFS);
+    
+    assertNotNull(path);
+    assertFalse(path.isEmpty());
+    assertEquals("A", path.getStartNode());
+    assertEquals("D", path.getEndNode());
+    
+    // BFS should find the shortest path which is A -> E -> F -> D (3 edges)
+    // or A -> B -> C -> D (3 edges)
+    // Both are valid shortest paths with BFS
+    assertEquals(3, path.getLength());
+}
+
+@Test
+void graphSearch_shouldUseSpecifiedAlgorithm_DFS(@TempDir Path tempDirSearch) throws IOException {
+    // Create a test graph with a known path
+    Path searchDotFile = tempDirSearch.resolve("search_test.dot");
+    String dotContent =
+            "digraph G {\n" +
+                    "    A;\n" +
+                    "    B;\n" +
+                    "    C;\n" +
+                    "    D;\n" +
+                    "    E;\n" +
+                    "    F;\n" +
+                    "    A -> B;\n" +
+                    "    B -> C;\n" +
+                    "    C -> D;\n" +
+                    "    A -> E;\n" +
+                    "    E -> F;\n" +
+                    "    F -> D;\n" +
+                    "}";
+    Files.writeString(searchDotFile, dotContent);
+    
+    Graph graph = Graph.parseGraph(searchDotFile.toString());
+    
+    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "D", Algorithm.DFS);
+    
+    assertNotNull(path);
+    assertFalse(path.isEmpty());
+    assertEquals("A", path.getStartNode());
+    assertEquals("D", path.getEndNode());
+    
+    // DFS will find a path, but not necessarily the shortest one
+    // So we only check that a path exists, not its specific length
+    assertTrue(path.getLength() > 0);
+}
+
+@Test
+void graphSearch_shouldHandleSameStartAndEnd_WithAlgorithm() throws IOException {
+    Graph graph = Graph.parseGraph(testDotFile.toString());
+    
+    // Test with BFS
+    com.shivenshekar.graphparser.Path bfsPath = graph.graphSearch("A", "A", Algorithm.BFS);
+    assertNotNull(bfsPath);
+    assertEquals(1, bfsPath.getNodes().size());
+    assertEquals(0, bfsPath.getLength());
+    
+    // Test with DFS
+    com.shivenshekar.graphparser.Path dfsPath = graph.graphSearch("A", "A", Algorithm.DFS);
+    assertNotNull(dfsPath);
+    assertEquals(1, dfsPath.getNodes().size());
+    assertEquals(0, dfsPath.getLength());
+}
+
+@Test
+void graphSearch_shouldReturnNullForUnreachableNode_WithAlgorithm() throws IOException {
+    Graph graph = Graph.parseGraph(testDotFile.toString());
+    graph.addNode("Z"); // Isolated node
+    
+    // Test with BFS
+    com.shivenshekar.graphparser.Path bfsPath = graph.graphSearch("A", "Z", Algorithm.BFS);
+    assertNull(bfsPath);
+    
+    // Test with DFS
+    com.shivenshekar.graphparser.Path dfsPath = graph.graphSearch("A", "Z", Algorithm.DFS);
+    assertNull(dfsPath);
+}
+
+@Test
+void graphSearch_shouldThrowExceptionForNonExistentNodes_WithAlgorithm() throws IOException {
+    Graph graph = Graph.parseGraph(testDotFile.toString());
+    
+    // Test for non-existent source
+    Exception srcException = assertThrows(IllegalArgumentException.class, () -> {
+        graph.graphSearch("X", "A", Algorithm.BFS);
+    });
+    assertTrue(srcException.getMessage().contains("Source node doesn't exist"));
+    
+    // Test for non-existent destination
+    Exception dstException = assertThrows(IllegalArgumentException.class, () -> {
+        graph.graphSearch("A", "X", Algorithm.DFS);
+    });
+    assertTrue(dstException.getMessage().contains("Destination node doesn't exist"));
+}
 }
