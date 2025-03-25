@@ -440,4 +440,115 @@ class GraphTest {
 
         assertTrue(exception.getMessage().contains("Destination node doesn't exist"));
     }
+
+    //
+// Feature 8: Graph Search with DFS
+//
+
+@Test
+void graphSearch_shouldFindPathUsingDFS(@TempDir Path tempDirSearch) throws IOException {
+    // Create a test graph with a known path
+    Path searchDotFile = tempDirSearch.resolve("search_test.dot");
+    String dotContent =
+            "digraph G {\n" +
+                    "    A;\n" +
+                    "    B;\n" +
+                    "    C;\n" +
+                    "    D;\n" +
+                    "    E;\n" +
+                    "    F;\n" +
+                    "    A -> B;\n" +
+                    "    B -> C;\n" +
+                    "    C -> D;\n" +
+                    "    A -> E;\n" +
+                    "    E -> F;\n" +
+                    "    F -> D;\n" +
+                    "}";
+    Files.writeString(searchDotFile, dotContent);
+    
+    Graph graph = Graph.parseGraph(searchDotFile.toString());
+    
+    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "D");
+    
+    assertNotNull(path);
+    assertFalse(path.isEmpty());
+    assertEquals("A", path.getStartNode());
+    assertEquals("D", path.getEndNode());
+    
+    // DFS will find a path, but not necessarily the shortest one
+    // So we only check that a path exists, not its specific length
+    assertTrue(path.getLength() > 0);
+}
+
+@Test
+void graphSearch_DFS_shouldReturnPathWithSingleNodeForSameStartAndEnd() throws IOException {
+    Graph graph = Graph.parseGraph(testDotFile.toString());
+    
+    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "A");
+    
+    assertNotNull(path);
+    assertFalse(path.isEmpty());
+    assertEquals(1, path.getNodes().size());
+    assertEquals("A", path.getStartNode());
+    assertEquals("A", path.getEndNode());
+    assertEquals(0, path.getLength());
+}
+
+@Test
+void graphSearch_DFS_shouldReturnNullForUnreachableNode() throws IOException {
+    Graph graph = Graph.parseGraph(testDotFile.toString());
+    
+    // Add an isolated node
+    graph.addNode("Z");
+    
+    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "Z");
+    
+    assertNull(path);
+}
+
+@Test
+void graphSearch_DFS_shouldThrowExceptionForNonExistentSourceNode() throws IOException {
+    Graph graph = Graph.parseGraph(testDotFile.toString());
+    
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        graph.graphSearch("X", "A");
+    });
+    
+    assertTrue(exception.getMessage().contains("Source node doesn't exist"));
+}
+
+@Test
+void graphSearch_DFS_shouldThrowExceptionForNonExistentDestinationNode() throws IOException {
+    Graph graph = Graph.parseGraph(testDotFile.toString());
+    
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        graph.graphSearch("A", "X");
+    });
+    
+    assertTrue(exception.getMessage().contains("Destination node doesn't exist"));
+}
+
+@Test
+void graphSearch_DFS_shouldHandleCyclicGraphs(@TempDir Path tempDirCyclic) throws IOException {
+    // Create a cyclic graph
+    Path cyclicDotFile = tempDirCyclic.resolve("cyclic_test.dot");
+    String dotContent =
+            "digraph G {\n" +
+                    "    A;\n" +
+                    "    B;\n" +
+                    "    C;\n" +
+                    "    A -> B;\n" +
+                    "    B -> C;\n" +
+                    "    C -> A;\n" +
+                    "}";
+    Files.writeString(cyclicDotFile, dotContent);
+    
+    Graph cyclicGraph = Graph.parseGraph(cyclicDotFile.toString());
+    
+    com.shivenshekar.graphparser.Path dfsPath = cyclicGraph.graphSearch("A", "C");
+    
+    assertNotNull(dfsPath);
+    assertEquals("A", dfsPath.getStartNode());
+    assertEquals("C", dfsPath.getEndNode());
+}
 }
