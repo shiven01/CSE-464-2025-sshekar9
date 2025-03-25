@@ -2,9 +2,9 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ main, bfs, dfs ]
+    branches: [ main, master, bfs, dfs ]
   pull_request:
-    branches: [ main, bfs, dfs ]
+    branches: [ main, master, bfs, dfs ]
 
 jobs:
   build:
@@ -20,8 +20,13 @@ jobs:
         distribution: 'temurin'
         cache: maven
     
+    - name: Change to project directory
+      run: cd "Project Part 1 + 2"
+    
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      working-directory: "Project Part 1 + 2"
+      run: mvn -B package
     
     - name: Test with Maven
+      working-directory: "Project Part 1 + 2"
       run: mvn test
