@@ -312,4 +312,62 @@ public class Graph {
 
         return sb.toString();
     }
+
+    /**
+ * Remove a node from the graph
+ * @param label Label of the node to remove
+ * @return true if node was removed
+ * @throws IllegalArgumentException if the node doesn't exist or has edges connected to it
+ */
+public boolean removeNode(String label) {
+    // Check if node exists
+    if (!graph.containsVertex(label)) {
+        throw new IllegalArgumentException("Node doesn't exist: " + label);
+    }
+    
+    // Check if node has any edges
+    if (graph.inDegreeOf(label) > 0 || graph.outDegreeOf(label) > 0) {
+        throw new IllegalArgumentException("Cannot remove node with connected edges: " + label);
+    }
+    
+    // Remove node
+    return graph.removeVertex(label);
+}
+
+/**
+ * Remove multiple nodes from the graph
+ * @param labels Array of node labels to remove
+ * @throws IllegalArgumentException if any node doesn't exist or has edges connected to it
+ */
+public void removeNodes(String[] labels) {
+    for (String label : labels) {
+        removeNode(label);
+    }
+}
+
+/**
+ * Remove an edge from the graph
+ * @param srcLabel Label of the source node
+ * @param dstLabel Label of the destination node
+ * @return true if edge was removed
+ * @throws IllegalArgumentException if either node doesn't exist or the edge doesn't exist
+ */
+public boolean removeEdge(String srcLabel, String dstLabel) {
+    // Check if nodes exist
+    if (!graph.containsVertex(srcLabel)) {
+        throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
+    }
+    if (!graph.containsVertex(dstLabel)) {
+        throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
+    }
+    
+    // Check if edge exists
+    if (!graph.containsEdge(srcLabel, dstLabel)) {
+        throw new IllegalArgumentException("Edge doesn't exist: " + srcLabel + " -> " + dstLabel);
+    }
+    
+    // Remove edge
+    DefaultEdge edge = graph.getEdge(srcLabel, dstLabel);
+    return graph.removeEdge(edge);
+}
 }
