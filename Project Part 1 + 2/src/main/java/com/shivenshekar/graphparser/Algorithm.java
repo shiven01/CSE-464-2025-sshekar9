@@ -5,5 +5,6 @@ package com.shivenshekar.graphparser;
  */
 public enum Algorithm {
   BFS, // Breadth-First Search
-  DFS // Depth-First Search
-}
+  DFS, // Depth-First Search
+  RANDOM  // Random Walk Search
+  }

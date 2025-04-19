@@ -5,16 +5,17 @@ import com.shivenshekar.graphparser.BFSAlgorithm;
 import com.shivenshekar.graphparser.DFSAlgorithm;
 import com.shivenshekar.graphparser.Graph;
 import com.shivenshekar.graphparser.Path;
+import com.shivenshekar.graphparser.RandomWalkAlgorithm;
 
 /**
- * Context class for the Strategy Pattern to manage different search strategies
+ * Context class for the Strategy Pattern
  */
 public class SearchContext {
     private SearchStrategy strategy;
 
     /**
-     * Set the search strategy based on Algorithm enum
-     * @param algo The algorithm to use
+     * Set strategy based on algorithm type
+     * @param algo Algorithm enum value
      */
     public void setAlgorithm(Algorithm algo) {
         switch (algo) {
@@ -24,13 +25,16 @@ public class SearchContext {
             case DFS:
                 this.strategy = new DFSAlgorithm();
                 break;
+            case RANDOM:
+                this.strategy = new RandomWalkAlgorithm();
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported algorithm: " + algo);
         }
     }
 
     /**
-     * Set a specific search strategy
+     * Set a specific strategy
      * @param strategy The search strategy to use
      */
     public void setStrategy(SearchStrategy strategy) {
@@ -38,7 +42,7 @@ public class SearchContext {
     }
 
     /**
-     * Execute the selected strategy to find a path
+     * Execute the selected search strategy
      * @param graph The graph to search in
      * @param srcLabel Source node label
      * @param dstLabel Destination node label
