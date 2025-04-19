@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +16,13 @@ import java.util.Map;
 import java.util.Set;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import com.shivenshekar.graphparser.search.SearchContext;
+import com.shivenshekar.graphparser.search.SearchStrategy;
 
 public class Graph {
 
   private DefaultDirectedGraph<String, DefaultEdge> graph;
+  private final SearchContext searchContext = new SearchContext();
   private Map<String, String> nodeLabels;
 
   public Graph() {
@@ -37,7 +39,7 @@ public class Graph {
   public static Graph parseGraph(String filepath) throws IOException {
     Graph graph = new Graph();
 
-    Path path = Paths.get(filepath);
+    java.nio.file.Path path = Paths.get(filepath);
     List<String> lines = Files.readAllLines(path);
 
     boolean inGraph = false;
@@ -300,7 +302,7 @@ public class Graph {
     }
 
     // Creating temporary DOT file
-    Path tempFile = Files.createTempFile("graph_", ".dot");
+    java.nio.file.Path tempFile = Files.createTempFile("graph_", ".dot");
     outputDOTGraph(tempFile.toString());
 
     try {
@@ -404,10 +406,10 @@ public class Graph {
    * @param srcLabel Label of the source node
    * @param dstLabel Label of the destination node
    * @param algo The algorithm to use (BFS or DFS)
-   * @return A GraphPath object if a path exists, null otherwise
+   * @return A Path object if a path exists, null otherwise
    * @throws IllegalArgumentException if either node doesn't exist or the algorithm is not supported
    */
-  public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel, Algorithm algo) {
+  public Path graphSearch(String srcLabel, String dstLabel, Algorithm algo) {
     // Check if nodes exist
     if (!graph.containsVertex(srcLabel)) {
       throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
@@ -416,31 +418,19 @@ public class Graph {
       throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
     }
 
-    // Choose algorithm based on parameter
-    GraphSearchAlgorithm searchAlgorithm;
-    switch (algo) {
-      case BFS:
-        searchAlgorithm = new BFSAlgorithm();
-        break;
-      case DFS:
-        searchAlgorithm = new DFSAlgorithm();
-        break;
-      default:
-        throw new IllegalArgumentException("Unsupported algorithm: " + algo);
-    }
-
-    // Execute the search algorithm
-    return searchAlgorithm.findPath(this, srcLabel, dstLabel);
+    // Use strategy context to set and execute the algorithm
+    searchContext.setAlgorithm(algo);
+    return searchContext.executeSearch(this, srcLabel, dstLabel);
   }
 
   /**
    * Search for a path from source node to destination node using default algorithm (BFS)
    * @param srcLabel Label of the source node
    * @param dstLabel Label of the destination node
-   * @return A GraphPath object if a path exists, null otherwise
+   * @return A Path object if a path exists, null otherwise
    * @throws IllegalArgumentException if either node doesn't exist
    */
-  public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel) {
+  public Path graphSearch(String srcLabel, String dstLabel) {
     // Call the three-parameter version with BFS as the default algorithm
     return graphSearch(srcLabel, dstLabel, Algorithm.BFS);
   }

@@ -1,9 +1,11 @@
 package com.shivenshekar.graphparser;
 
+import com.shivenshekar.graphparser.search.SearchStrategy;
+
 /**
  * Abstract base class for graph search algorithms using Template Method pattern
  */
-public abstract class GraphSearchAlgorithm {
+public abstract class GraphSearchAlgorithm implements SearchStrategy {
 
   /**
    * Template method that defines the skeleton of the search algorithm
@@ -12,6 +14,7 @@ public abstract class GraphSearchAlgorithm {
    * @param dstLabel Destination node label
    * @return A Path object if a path exists, null otherwise
    */
+  @Override
   public final Path findPath(Graph graph, String srcLabel, String dstLabel) {
     // Handle special case: source and destination are the same
     if (srcLabel.equals(dstLabel)) {
