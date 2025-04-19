@@ -105,10 +105,10 @@ public class Graph {
         }
         // Handle node definitions
         else if (
-          !line.contains("=") &&
-          !line.contains("subgraph") &&
-          !line.contains("graph") &&
-          !line.contains("digraph")
+                !line.contains("=") &&
+                        !line.contains("subgraph") &&
+                        !line.contains("graph") &&
+                        !line.contains("digraph")
         ) {
           String node = line;
 
@@ -295,7 +295,7 @@ public class Graph {
     format = format.toLowerCase();
     if (!format.equals("png")) {
       throw new IllegalArgumentException(
-        "Unsupported format: " + format + ". Only 'png' is supported."
+              "Unsupported format: " + format + ". Only 'png' is supported."
       );
     }
 
@@ -404,10 +404,10 @@ public class Graph {
    * @param srcLabel Label of the source node
    * @param dstLabel Label of the destination node
    * @param algo The algorithm to use (BFS or DFS)
-   * @return A Path object if a path exists, null otherwise
+   * @return A GraphPath object if a path exists, null otherwise
    * @throws IllegalArgumentException if either node doesn't exist or the algorithm is not supported
    */
-  public Path graphSearch(String srcLabel, String dstLabel, Algorithm algo) {
+  public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel, Algorithm algo) {
     // Check if nodes exist
     if (!graph.containsVertex(srcLabel)) {
       throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
@@ -437,10 +437,10 @@ public class Graph {
    * Search for a path from source node to destination node using default algorithm (BFS)
    * @param srcLabel Label of the source node
    * @param dstLabel Label of the destination node
-   * @return A Path object if a path exists, null otherwise
+   * @return A GraphPath object if a path exists, null otherwise
    * @throws IllegalArgumentException if either node doesn't exist
    */
-  public Path graphSearch(String srcLabel, String dstLabel) {
+  public com.shivenshekar.graphparser.Path graphSearch(String srcLabel, String dstLabel) {
     // Call the three-parameter version with BFS as the default algorithm
     return graphSearch(srcLabel, dstLabel, Algorithm.BFS);
   }
