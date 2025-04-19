@@ -11,9 +11,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import com.shivenshekar.graphparser.search.SearchContext;
@@ -27,6 +32,16 @@ public class Graph {
 
   public Graph() {
     this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+    this.nodeLabels = new HashMap<>();
+  }
+
+  /**
+   * Get the internal JGraphT graph (for testing purposes)
+   *
+   * @return The internal graph representation
+   */
+  DefaultDirectedGraph<String, DefaultEdge> getInternalGraph() {
+    return this.graph;
   }
 
   /**
@@ -42,6 +57,29 @@ public class Graph {
     java.nio.file.Path path = Paths.get(filepath);
     List<String> lines = Files.readAllLines(path);
 
+    // Parse the DOT file content
+    GraphContent content = parseDotContent(lines);
+
+    // Add nodes to the graph
+    for (String node : content.nodes) {
+      graph.graph.addVertex(node);
+    }
+
+    // Add edges to the graph
+    for (String[] edge : content.edges) {
+      graph.graph.addEdge(edge[0], edge[1]);
+    }
+
+    return graph;
+  }
+
+  /**
+   * Parse DOT file content into graph components
+   *
+   * @param lines Lines from the DOT file
+   * @return GraphContent containing nodes and edges
+   */
+  private static GraphContent parseDotContent(List<String> lines) {
     boolean inGraph = false;
     List<String> nodes = new ArrayList<>();
     List<String[]> edges = new ArrayList<>();
@@ -49,99 +87,132 @@ public class Graph {
     for (String line : lines) {
       line = line.trim();
 
-      // Skipping comments and empty lines
+      // Skip comments and empty lines
       if (line.startsWith("//") || line.startsWith("#") || line.isEmpty()) {
         continue;
       }
 
-      // Checking if entering graph
+      // Determine if we're entering or exiting the graph definition
       if (line.contains("{")) {
         inGraph = true;
         continue;
-      }
-
-      // Checking if exiting graph
-      if (line.contains("}")) {
+      } else if (line.contains("}")) {
         inGraph = false;
         continue;
       }
 
-      // Processing graph
+      // Process content if we're inside the graph definition
       if (inGraph) {
-        // Handling edge definitions
         if (line.contains("->") || line.contains("--")) {
-          String[] parts;
-          if (line.contains("->")) {
-            parts = line.split("->");
-          } else {
-            parts = line.split("--");
-          }
+          // Process edge definition
+          String[] edgeData = parseEdge(line);
+          if (edgeData != null) {
+            edges.add(edgeData);
 
-          if (parts.length >= 2) {
-            String source = parts[0].trim();
-            String target = parts[1].trim();
-
-            // Removing attributes
-            if (source.contains("[")) {
-              source = source.substring(0, source.indexOf("[")).trim();
+            // Add nodes from the edge if they don't exist
+            if (!nodes.contains(edgeData[0])) {
+              nodes.add(edgeData[0]);
             }
-            if (target.contains("[")) {
-              target = target.substring(0, target.indexOf("[")).trim();
-            }
-
-            // Removing semicolons
-            if (target.endsWith(";")) {
-              target = target.substring(0, target.length() - 1).trim();
-            }
-
-            edges.add(new String[] { source, target });
-
-            // Adding nodes
-            if (!nodes.contains(source)) {
-              nodes.add(source);
-            }
-            if (!nodes.contains(target)) {
-              nodes.add(target);
+            if (!nodes.contains(edgeData[1])) {
+              nodes.add(edgeData[1]);
             }
           }
-        }
-        // Handle node definitions
-        else if (
-                !line.contains("=") &&
-                        !line.contains("subgraph") &&
-                        !line.contains("graph") &&
-                        !line.contains("digraph")
-        ) {
-          String node = line;
-
-          // Removing attributes
-          if (node.contains("[")) {
-            node = node.substring(0, node.indexOf("[")).trim();
-          }
-
-          // Removing semicolons
-          if (node.endsWith(";")) {
-            node = node.substring(0, node.length() - 1).trim();
-          }
-
-          if (!node.isEmpty() && !nodes.contains(node)) {
+        } else if (!isGraphMetadata(line)) {
+          // Process node definition
+          String node = parseNode(line);
+          if (node != null && !node.isEmpty() && !nodes.contains(node)) {
             nodes.add(node);
           }
         }
       }
     }
 
-    // Adding nodes
-    for (String node : nodes) {
-      graph.graph.addVertex(node);
+    return new GraphContent(nodes, edges);
+  }
+
+  /**
+   * Parse an edge definition line
+   *
+   * @param line Line containing edge definition
+   * @return Array with [source, target] or null if invalid
+   */
+  private static String[] parseEdge(String line) {
+    String[] parts;
+    if (line.contains("->")) {
+      parts = line.split("->");
+    } else {
+      parts = line.split("--");
     }
 
-    // Adding edges
-    for (String[] edge : edges) {
-      graph.graph.addEdge(edge[0], edge[1]);
+    if (parts.length >= 2) {
+      String source = parts[0].trim();
+      String target = parts[1].trim();
+
+      // Remove attributes
+      if (source.contains("[")) {
+        source = source.substring(0, source.indexOf("[")).trim();
+      }
+      if (target.contains("[")) {
+        target = target.substring(0, target.indexOf("[")).trim();
+      }
+
+      // Remove semicolons
+      if (target.endsWith(";")) {
+        target = target.substring(0, target.length() - 1).trim();
+      }
+
+      return new String[] { source, target };
     }
 
-    return graph;
+    return null;
+  }
+
+  /**
+   * Parse a node definition line
+   *
+   * @param line Line containing node definition
+   * @return Node label or null if invalid
+   */
+  private static String parseNode(String line) {
+    String node = line;
+
+    // Remove attributes
+    if (node.contains("[")) {
+      node = node.substring(0, node.indexOf("[")).trim();
+    }
+
+    // Remove semicolons
+    if (node.endsWith(";")) {
+      node = node.substring(0, node.length() - 1).trim();
+    }
+
+    return node;
+  }
+
+  /**
+   * Check if a line contains graph metadata rather than node/edge definitions
+   *
+   * @param line Line to check
+   * @return true if the line contains graph metadata
+   */
+  private static boolean isGraphMetadata(String line) {
+    return line.contains("=") ||
+            line.contains("subgraph") ||
+            line.contains("graph") ||
+            line.contains("digraph");
+  }
+
+  /**
+   * Inner class to hold parsed graph content
+   */
+  private static class GraphContent {
+    final List<String> nodes;
+    final List<String[]> edges;
+
+    GraphContent(List<String> nodes, List<String[]> edges) {
+      this.nodes = nodes;
+      this.edges = edges;
+    }
   }
 
   /**
@@ -172,24 +243,24 @@ public class Graph {
   }
 
   /**
-   * Add an edge from source node to destination node
+   * Add an edge to the graph
    *
-   * @param srcLabel Label of the source node
-   * @param dstLabel Label of the destination node
+   * @param sourceLabel Source node label
+   * @param targetLabel Target node label
    * @return true if edge was added, false if it already existed
    */
-  public boolean addEdge(String srcLabel, String dstLabel) {
-    // Adding nodes
-    addNode(srcLabel);
-    addNode(dstLabel);
+  public boolean addEdge(String sourceLabel, String targetLabel) {
+    // Add nodes if they don't exist
+    addNode(sourceLabel);
+    addNode(targetLabel);
 
-    // Checking edges
-    if (graph.containsEdge(srcLabel, dstLabel)) {
+    // Check if edge already exists
+    if (graph.containsEdge(sourceLabel, targetLabel)) {
       return false;
     }
 
-    // Adding edge
-    graph.addEdge(srcLabel, dstLabel);
+    // Add the edge
+    graph.addEdge(sourceLabel, targetLabel);
     return true;
   }
 
@@ -220,14 +291,30 @@ public class Graph {
     return graph.vertexSet();
   }
 
+  /**
+   * Get outgoing edges for a node
+   *
+   * @param nodeLabel Label of the node
+   * @return Set of outgoing edges
+   */
   public Set<DefaultEdge> getOutgoingEdges(String nodeLabel) {
     return graph.outgoingEdgesOf(nodeLabel);
   }
 
   /**
-   * Get a string representation of all edges in the graph
+   * Get the target node of an edge
    *
-   * @return List of edge strings (e.g., "a -> b")
+   * @param edge Edge to get target for
+   * @return Target node label
+   */
+  public String getEdgeTarget(DefaultEdge edge) {
+    return graph.getEdgeTarget(edge);
+  }
+
+  /**
+   * Get a list of all edges in the graph as strings
+   *
+   * @return List of edge strings (e.g., "A -> B")
    */
   public List<String> getEdges() {
     List<String> edgeStrings = new ArrayList<>();
@@ -241,33 +328,26 @@ public class Graph {
     return edgeStrings;
   }
 
-  public String getEdgeTarget(DefaultEdge edge) {
-    return graph.getEdgeTarget(edge);
-  }
-
   /**
-   * Output the graph to a DOT format file
+   * Output the graph to a DOT file
    *
-   * @param filepath Path to save the DOT file
+   * @param filepath Path to output file
    * @throws IOException If file couldn't be written
    */
-  public void outputGraph(String filepath) throws IOException {
+  public void outputDOTGraph(String filepath) throws IOException {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))) {
-      writer.write("digraph G {");
-      writer.newLine();
+      writer.write("digraph G {\n");
 
-      // Writing nodes
+      // Write all nodes
       for (String node : graph.vertexSet()) {
-        writer.write("    " + node + ";");
-        writer.newLine();
+        writer.write("    " + node + ";\n");
       }
 
-      // Writing edges
+      // Write all edges
       for (DefaultEdge edge : graph.edgeSet()) {
         String source = graph.getEdgeSource(edge);
         String target = graph.getEdgeTarget(edge);
-        writer.write("    " + source + " -> " + target + ";");
-        writer.newLine();
+        writer.write("    " + source + " -> " + target + ";\n");
       }
 
       writer.write("}");
@@ -275,66 +355,47 @@ public class Graph {
   }
 
   /**
-   * Output the graph to a DOT format file
-   *
-   * @param path Path to save the DOT file
+   * Legacy method for compatibility with tests
+   * @param outputPath Path to output file
    * @throws IOException If file couldn't be written
    */
-  public void outputDOTGraph(String path) throws IOException {
-    // Using existing output method
-    outputGraph(path);
+  public void outputGraph(String outputPath) throws IOException {
+    outputDOTGraph(outputPath);
   }
 
   /**
-   * Output the graph to a graphics file
+   * Generate a graphical representation of the graph
    *
-   * @param path   Path to save the graphics file
-   * @param format Format of the output file (png supported)
+   * @param outputPath Path to output file
+   * @param format Format to use (png, svg)
    * @throws IOException If file couldn't be written
    */
-  public void outputGraphics(String path, String format) throws IOException {
-    // Checking format support
-    format = format.toLowerCase();
-    if (!format.equals("png")) {
-      throw new IllegalArgumentException(
-              "Unsupported format: " + format + ". Only 'png' is supported."
-      );
+  public void outputGraphics(String outputPath, String format) throws IOException {
+    // Create temporary DOT file
+    File tempFile = File.createTempFile("graph_", ".dot");
+    outputDOTGraph(tempFile.getAbsolutePath());
+
+    // Determine the output format
+    Format outputFormat;
+    switch (format.toLowerCase()) {
+      case "png":
+        outputFormat = Format.PNG;
+        break;
+      case "svg":
+        outputFormat = Format.SVG;
+        break;
+      default:
+        throw new IllegalArgumentException("Unsupported format: " + format);
     }
 
-    // Creating temporary DOT file
-    java.nio.file.Path tempFile = Files.createTempFile("graph_", ".dot");
-    outputDOTGraph(tempFile.toString());
-
+    // Generate the graphical output
     try {
-      // Reading DOT content
-      String dotContent = Files.readString(tempFile);
-
-      // Parsing and rendering
-      MutableGraph g = new Parser().read(dotContent);
-      Graphviz.fromGraph(g).width(800).render(Format.PNG).toFile(new File(path));
+      MutableGraph g = new Parser().read(tempFile);
+      Graphviz.fromGraph(g).width(700).render(outputFormat).toFile(new File(outputPath));
     } finally {
-      Files.deleteIfExists(tempFile);
+      // Clean up temporary file
+      tempFile.delete();
     }
-  }
-
-  /**
-   * Return a string representation of the graph
-   */
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("Graph:\n");
-    sb.append("Number of nodes: ").append(getNodeCount()).append("\n");
-    sb.append("Nodes: ").append(getNodes()).append("\n");
-    sb.append("Number of edges: ").append(getEdgeCount()).append("\n");
-    sb.append("Edges:\n");
-
-    for (String edge : getEdges()) {
-      sb.append("  ").append(edge).append("\n");
-    }
-
-    return sb.toString();
   }
 
   /**
@@ -402,36 +463,63 @@ public class Graph {
   }
 
   /**
-   * Search for a path from source node to destination node
-   * @param srcLabel Label of the source node
-   * @param dstLabel Label of the destination node
-   * @param algo The algorithm to use (BFS or DFS)
-   * @return A Path object if a path exists, null otherwise
-   * @throws IllegalArgumentException if either node doesn't exist or the algorithm is not supported
+   * Search for a path between two nodes using the specified algorithm
+   *
+   * @param startNode Start node label
+   * @param endNode End node label
+   * @param algorithm Algorithm to use (BFS, DFS, RANDOM)
+   * @return Path if found, null if no path exists
    */
-  public Path graphSearch(String srcLabel, String dstLabel, Algorithm algo) {
+  public Path graphSearch(String startNode, String endNode, Algorithm algorithm) {
     // Check if nodes exist
-    if (!graph.containsVertex(srcLabel)) {
-      throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
+    if (!graph.containsVertex(startNode)) {
+      throw new IllegalArgumentException("Source node doesn't exist: " + startNode);
     }
-    if (!graph.containsVertex(dstLabel)) {
-      throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
+    if (!graph.containsVertex(endNode)) {
+      throw new IllegalArgumentException("Destination node doesn't exist: " + endNode);
+    }
+
+    // If start and end are the same, return a path with just that node
+    if (startNode.equals(endNode)) {
+      Path path = new Path();
+      path.addNode(startNode);
+      return path;
     }
 
     // Use strategy context to set and execute the algorithm
-    searchContext.setAlgorithm(algo);
-    return searchContext.executeSearch(this, srcLabel, dstLabel);
+    searchContext.setAlgorithm(algorithm);
+    return searchContext.executeSearch(this, startNode, endNode);
   }
 
   /**
-   * Search for a path from source node to destination node using default algorithm (BFS)
-   * @param srcLabel Label of the source node
-   * @param dstLabel Label of the destination node
-   * @return A Path object if a path exists, null otherwise
-   * @throws IllegalArgumentException if either node doesn't exist
+   * Search for a path using BFS (default algorithm)
+   *
+   * @param startNode Start node label
+   * @param endNode End node label
+   * @return Path if found, null if no path exists
    */
-  public Path graphSearch(String srcLabel, String dstLabel) {
-    // Call the three-parameter version with BFS as the default algorithm
-    return graphSearch(srcLabel, dstLabel, Algorithm.BFS);
+  public Path graphSearch(String startNode, String endNode) {
+    return graphSearch(startNode, endNode, Algorithm.BFS);
+  }
+
+  /**
+   * Get a string representation of the graph
+   *
+   * @return String representation
+   */
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Graph:\n");
+    sb.append("Number of nodes: ").append(getNodeCount()).append("\n");
+    sb.append("Nodes: ").append(getNodes()).append("\n");
+    sb.append("Number of edges: ").append(getEdgeCount()).append("\n");
+    sb.append("Edges:\n");
+
+    for (String edge : getEdges()) {
+      sb.append("  ").append(edge).append("\n");
+    }
+
+    return sb.toString();
   }
 }

@@ -11,12 +11,29 @@ import java.util.List;
 public class Path {
 
   private List<String> nodes;
+  private String startNode;
+  private String endNode;
 
   /**
-   * Create an empty path
+   * Create an empty path with no defined start or end nodes
+   * This is used when constructing paths programmatically
    */
   public Path() {
     this.nodes = new ArrayList<>();
+    this.startNode = null;
+    this.endNode = null;
+  }
+
+  /**
+   * Create a path with specified start and end nodes
+   *
+   * @param startNode Start node of the path
+   * @param endNode End node of the path
+   */
+  public Path(String startNode, String endNode) {
+    this.nodes = new ArrayList<>();
+    this.startNode = startNode;
+    this.endNode = endNode;
   }
 
   /**
@@ -26,6 +43,10 @@ public class Path {
    */
   public Path(List<String> nodes) {
     this.nodes = new ArrayList<>(nodes);
+    if (!nodes.isEmpty()) {
+      this.startNode = nodes.get(0);
+      this.endNode = nodes.get(nodes.size() - 1);
+    }
   }
 
   /**
@@ -35,6 +56,11 @@ public class Path {
    */
   public void addNode(String node) {
     nodes.add(node);
+    // Update start/end nodes if this is the first node or a new end
+    if (nodes.size() == 1) {
+      this.startNode = node;
+    }
+    this.endNode = node;
   }
 
   /**
