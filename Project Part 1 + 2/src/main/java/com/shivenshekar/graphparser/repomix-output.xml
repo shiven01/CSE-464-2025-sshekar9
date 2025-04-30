@@ -1,0 +1,1724 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+4. Repository files, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+<additional_info>
+
+</additional_info>
+
+</file_summary>
+
+<directory_structure>
+algorithm/
+  Algorithm.java
+  BFSAlgorithm.java
+  DFSAlgorithm.java
+  GraphSearchAlgorithm.java
+  RandomWalkAlgorithm.java
+core/
+  Graph.java
+  Path.java
+demo/
+  Main.java
+  RandomWalkDemo.java
+  SearchDemo.java
+io/
+  DOTRenderer.java
+  GraphRenderer.java
+  GraphvizRenderer.java
+parser/
+  DOTParser.java
+search/
+  GraphSearchService.java
+  SearchContext.java
+  SearchStrategy.java
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="algorithm/Algorithm.java">
+package com.shivenshekar.graphparser.algorithm;
+
+/**
+ * Enum to represent graph search algorithms
+ */
+public enum Algorithm {
+  BFS, // Breadth-First Search
+  DFS, // Depth-First Search
+  RANDOM  // Random Walk Search
+  }
+</file>
+
+<file path="algorithm/BFSAlgorithm.java">
+package com.shivenshekar.graphparser.algorithm;
+
+import java.util.*;
+
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+import org.jgrapht.graph.DefaultEdge;
+
+/**
+ * Breadth-First Search algorithm implementation
+ */
+public class BFSAlgorithm extends GraphSearchAlgorithm {
+
+  @Override
+  protected Path performSearch(Graph graph, String srcLabel, String dstLabel) {
+    // Set to track visited nodes
+    Set<String> visited = new HashSet<>();
+    // Queue to track nodes to visit
+    Queue<Path> queue = new LinkedList<>();
+
+    // Initialize path with source node
+    Path initialPath = new Path();
+    initialPath.addNode(srcLabel);
+    queue.add(initialPath);
+    visited.add(srcLabel);
+
+    // BFS traversal
+    while (!queue.isEmpty()) {
+      Path currentPath = queue.poll();
+      String currentNode = currentPath.getEndNode();
+
+      // Get neighbors (outgoing edges)
+      for (DefaultEdge edge : graph.getOutgoingEdges(currentNode)) {
+        String neighbor = graph.getEdgeTarget(edge);
+
+        // If we found the destination, return the path
+        if (neighbor.equals(dstLabel)) {
+          Path foundPath = currentPath.copy();
+          foundPath.addNode(neighbor);
+          return foundPath;
+        }
+
+        // If neighbor hasn't been visited, add it to the queue
+        if (!visited.contains(neighbor)) {
+          visited.add(neighbor);
+          Path newPath = currentPath.copy();
+          newPath.addNode(neighbor);
+          queue.add(newPath);
+        }
+      }
+    }
+
+    // No path found
+    return null;
+  }
+}
+</file>
+
+<file path="algorithm/DFSAlgorithm.java">
+package com.shivenshekar.graphparser.algorithm;
+
+import java.util.*;
+
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+import org.jgrapht.graph.DefaultEdge;
+
+/**
+ * Depth-First Search algorithm implementation
+ */
+public class DFSAlgorithm extends GraphSearchAlgorithm {
+
+  @Override
+  protected Path performSearch(Graph graph, String srcLabel, String dstLabel) {
+    // Set to track visited nodes
+    Set<String> visited = new HashSet<>();
+
+    // Start DFS from source node
+    Path initialPath = new Path();
+    initialPath.addNode(srcLabel);
+
+    return dfsRecursive(graph, srcLabel, dstLabel, visited, initialPath);
+  }
+
+  /**
+   * Recursive helper method for DFS
+   * @param graph The graph
+   * @param currentNode Current node being visited
+   * @param dstLabel Destination node we're looking for
+   * @param visited Set of visited nodes
+   * @param path Current path being explored
+   * @return A Path object if a path exists, null otherwise
+   */
+  private Path dfsRecursive(
+    Graph graph,
+    String currentNode,
+    String dstLabel,
+    Set<String> visited,
+    Path path
+  ) {
+    // Mark current node as visited
+    visited.add(currentNode);
+
+    // If we reached the destination, return the path
+    if (currentNode.equals(dstLabel)) {
+      return path;
+    }
+
+    // Visit all neighbors
+    for (DefaultEdge edge : graph.getOutgoingEdges(currentNode)) {
+      String neighbor = graph.getEdgeTarget(edge);
+
+      if (!visited.contains(neighbor)) {
+        // Add neighbor to path
+        Path newPath = path.copy();
+        newPath.addNode(neighbor);
+
+        // Recursively visit neighbor
+        Path resultPath = dfsRecursive(graph, neighbor, dstLabel, visited, newPath);
+        if (resultPath != null) {
+          return resultPath;
+        }
+      }
+    }
+
+    // No path found from this node
+    return null;
+  }
+}
+</file>
+
+<file path="algorithm/GraphSearchAlgorithm.java">
+package com.shivenshekar.graphparser.algorithm;
+
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+import com.shivenshekar.graphparser.search.SearchStrategy;
+
+/**
+ * Abstract base class for graph search algorithms using Template Method pattern
+ */
+public abstract class GraphSearchAlgorithm implements SearchStrategy {
+
+  /**
+   * Template method that defines the skeleton of the search algorithm
+   * @param graph The graph to search in
+   * @param srcLabel Source node label
+   * @param dstLabel Destination node label
+   * @return A Path object if a path exists, null otherwise
+   */
+  @Override
+  public final Path findPath(Graph graph, String srcLabel, String dstLabel) {
+    // Handle special case: source and destination are the same
+    if (srcLabel.equals(dstLabel)) {
+      Path path = new Path();
+      path.addNode(srcLabel);
+      return path;
+    }
+
+    // Execute algorithm-specific search
+    return performSearch(graph, srcLabel, dstLabel);
+  }
+
+  /**
+   * Abstract method to be implemented by concrete algorithm classes
+   * @param graph The graph to search in
+   * @param srcLabel Source node label
+   * @param dstLabel Destination node label
+   * @return A Path object if a path exists, null otherwise
+   */
+  protected abstract Path performSearch(Graph graph, String srcLabel, String dstLabel);
+}
+</file>
+
+<file path="algorithm/RandomWalkAlgorithm.java">
+package com.shivenshekar.graphparser.algorithm;
+
+import java.util.*;
+
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+import org.jgrapht.graph.DefaultEdge;
+
+/**
+ * Random Walk Search algorithm implementation with configurable parameters
+ */
+public class RandomWalkAlgorithm extends GraphSearchAlgorithm {
+    // Default maximum steps to take before giving up
+    private static final int DEFAULT_MAX_STEPS = 1000;
+    // Default probability of backtracking when stuck
+    private static final double DEFAULT_BACKTRACK_PROBABILITY = 0.3;
+
+    private final Random random;
+    private final int maxSteps;
+    private final double backtrackProbability;
+    private boolean verbose;
+
+    /**
+     * Creates a RandomWalkAlgorithm with default parameters
+     */
+    public RandomWalkAlgorithm() {
+        this(DEFAULT_MAX_STEPS, DEFAULT_BACKTRACK_PROBABILITY, false, new Random());
+    }
+
+    /**
+     * Creates a RandomWalkAlgorithm with custom parameters
+     *
+     * @param maxSteps Maximum number of steps before giving up
+     * @param backtrackProbability Probability of backtracking when stuck
+     * @param verbose Whether to print debug information
+     * @param random Random number generator to use
+     */
+    public RandomWalkAlgorithm(int maxSteps, double backtrackProbability, boolean verbose, Random random) {
+        this.maxSteps = maxSteps;
+        this.backtrackProbability = backtrackProbability;
+        this.verbose = verbose;
+        this.random = random;
+    }
+
+    /**
+     * Set verbose mode for debugging
+     *
+     * @param verbose true to enable debug output
+     */
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    @Override
+    protected Path performSearch(Graph graph, String srcLabel, String dstLabel) {
+        String currentNode = srcLabel;
+        Path currentPath = new Path();
+        currentPath.addNode(srcLabel);
+
+        // Track visited nodes and their visit counts
+        Map<String, Integer> visitCounts = new HashMap<>();
+        visitCounts.put(srcLabel, 1);
+
+        int steps = 0;
+
+        if (verbose) {
+            System.out.println("Starting random walk from " + srcLabel + " to " + dstLabel);
+        }
+
+        // Continue random walk until destination is found or max steps reached
+        while (steps < maxSteps) {
+            if (verbose) {
+                System.out.println("Step " + steps + ": " + currentPath);
+            }
+
+            // Get neighbors
+            List<String> neighbors = new ArrayList<>();
+            for (DefaultEdge edge : graph.getOutgoingEdges(currentNode)) {
+                String neighbor = graph.getEdgeTarget(edge);
+
+                // If destination is a direct neighbor, go there and return
+                if (neighbor.equals(dstLabel)) {
+                    Path finalPath = currentPath.copy();
+                    finalPath.addNode(dstLabel);
+
+                    if (verbose) {
+                        System.out.println("Path found: " + finalPath);
+                    }
+
+                    return finalPath;
+                }
+
+                neighbors.add(neighbor);
+            }
+
+            // If no neighbors, we're stuck in a dead end
+            if (neighbors.isEmpty()) {
+                if (verbose) {
+                    System.out.println("Dead end reached at " + currentNode);
+                }
+                return null;
+            }
+
+            // Choose next node with preference for less visited nodes
+            String nextNode;
+
+            // Possibly backtrack if we're revisiting nodes too much
+            if (hasHighlyVisitedNeighbors(neighbors, visitCounts) && random.nextDouble() < backtrackProbability) {
+                // Backtrack - remove current node and go back
+                if (currentPath.getNodes().size() > 1) {
+                    List<String> pathNodes = new ArrayList<>(currentPath.getNodes());
+                    pathNodes.remove(pathNodes.size() - 1);
+                    nextNode = pathNodes.get(pathNodes.size() - 1);
+
+                    // Create new path after backtracking
+                    currentPath = new Path(pathNodes);
+
+                    if (verbose) {
+                        System.out.println("Backtracking to " + nextNode);
+                    }
+                } else {
+                    // Can't backtrack from start node, choose a random neighbor
+                    nextNode = neighbors.get(random.nextInt(neighbors.size()));
+                    currentPath.addNode(nextNode);
+                }
+            } else {
+                // Choose next node with preference for less visited neighbors
+                nextNode = selectNextNode(neighbors, visitCounts);
+                currentPath.addNode(nextNode);
+            }
+
+            // Update current node and visit count
+            currentNode = nextNode;
+            visitCounts.put(currentNode, visitCounts.getOrDefault(currentNode, 0) + 1);
+
+            // Check if we've reached the destination
+            if (nextNode.equals(dstLabel)) {
+                if (verbose) {
+                    System.out.println("Path found: " + currentPath);
+                }
+                return currentPath;
+            }
+
+            steps++;
+        }
+
+        if (verbose) {
+            System.out.println("No path found after " + maxSteps + " steps");
+        }
+
+        // No path found within max steps
+        return null;
+    }
+
+    /**
+     * Check if neighbors have been visited many times
+     */
+    private boolean hasHighlyVisitedNeighbors(List<String> neighbors, Map<String, Integer> visitCounts) {
+        for (String neighbor : neighbors) {
+            int visits = visitCounts.getOrDefault(neighbor, 0);
+            if (visits > 2) {  // Threshold for "highly visited"
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Select the next node to visit with preference for less visited nodes
+     */
+    private String selectNextNode(List<String> neighbors, Map<String, Integer> visitCounts) {
+        // Sort neighbors by visit count (ascending)
+        neighbors.sort(Comparator.comparingInt(n -> visitCounts.getOrDefault(n, 0)));
+
+        // 70% chance to pick from less visited nodes, 30% fully random
+        if (random.nextDouble() < 0.7 && !neighbors.isEmpty()) {
+            // Pick from the least visited half of neighbors
+            int candidateCount = Math.max(1, neighbors.size() / 2);
+            return neighbors.get(random.nextInt(candidateCount));
+        } else {
+            // Completely random choice
+            return neighbors.get(random.nextInt(neighbors.size()));
+        }
+    }
+}
+</file>
+
+<file path="core/Graph.java">
+package com.shivenshekar.graphparser.core;
+
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.io.DOTRenderer;
+import com.shivenshekar.graphparser.io.GraphvizRenderer;
+import com.shivenshekar.graphparser.parser.DOTParser;
+import com.shivenshekar.graphparser.search.GraphSearchService;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.model.MutableGraph;
+import guru.nidi.graphviz.parse.Parser;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
+import com.shivenshekar.graphparser.search.SearchContext;
+
+public class Graph {
+
+  private DefaultDirectedGraph<String, DefaultEdge> graph;
+  private final SearchContext searchContext = new SearchContext();
+  private Map<String, String> nodeLabels;
+  private final DOTRenderer dotRenderer = new DOTRenderer();
+  private final GraphvizRenderer pngRenderer = new GraphvizRenderer("png");
+  private final GraphvizRenderer svgRenderer = new GraphvizRenderer("svg");
+  private final GraphSearchService searchService = new GraphSearchService();
+
+  public Graph() {
+    this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+    this.nodeLabels = new HashMap<>();
+  }
+
+  /**
+   * Get the internal JGraphT graph (for testing purposes)
+   *
+   * @return The internal graph representation
+   */
+  DefaultDirectedGraph<String, DefaultEdge> getInternalGraph() {
+    return this.graph;
+  }
+
+  /**
+   * Parse a DOT graph file and create a graph
+   *
+   * @param filepath Path to the DOT file
+   * @return Graph instance containing the parsed graph
+   * @throws IOException If file not found or couldn't be read
+   */
+  public static Graph parseGraph(String filepath) throws IOException {
+    return DOTParser.parseGraph(filepath);
+  }
+
+  /**
+   * Add a node to the graph
+   *
+   * @param label Label of the node to add
+   * @return true if node was added, false if it already existed
+   */
+  public boolean addNode(String label) {
+    // Checking if node exists
+    if (graph.containsVertex(label)) {
+      return false;
+    }
+
+    // Adding node
+    return graph.addVertex(label);
+  }
+
+  /**
+   * Add multiple nodes to the graph
+   *
+   * @param labels Array of node labels to add
+   */
+  public void addNodes(String[] labels) {
+    for (String label : labels) {
+      addNode(label);
+    }
+  }
+
+  /**
+   * Add an edge to the graph
+   *
+   * @param sourceLabel Source node label
+   * @param targetLabel Target node label
+   * @return true if edge was added, false if it already existed
+   */
+  public boolean addEdge(String sourceLabel, String targetLabel) {
+    // Add nodes if they don't exist
+    addNode(sourceLabel);
+    addNode(targetLabel);
+
+    // Check if edge already exists
+    if (graph.containsEdge(sourceLabel, targetLabel)) {
+      return false;
+    }
+
+    // Add the edge
+    graph.addEdge(sourceLabel, targetLabel);
+    return true;
+  }
+
+  /**
+   * Get the number of nodes in the graph
+   *
+   * @return Number of nodes
+   */
+  public int getNodeCount() {
+    return graph.vertexSet().size();
+  }
+
+  /**
+   * Get the number of edges in the graph
+   *
+   * @return Number of edges
+   */
+  public int getEdgeCount() {
+    return graph.edgeSet().size();
+  }
+
+  /**
+   * Get all node labels in the graph
+   *
+   * @return Set of node labels
+   */
+  public Set<String> getNodes() {
+    return graph.vertexSet();
+  }
+
+  /**
+   * Get outgoing edges for a node
+   *
+   * @param nodeLabel Label of the node
+   * @return Set of outgoing edges
+   */
+  public Set<DefaultEdge> getOutgoingEdges(String nodeLabel) {
+    return graph.outgoingEdgesOf(nodeLabel);
+  }
+
+  /**
+   * Get the target node of an edge
+   *
+   * @param edge Edge to get target for
+   * @return Target node label
+   */
+  public String getEdgeTarget(DefaultEdge edge) {
+    return graph.getEdgeTarget(edge);
+  }
+
+  /**
+   * Get a list of all edges in the graph as strings
+   *
+   * @return List of edge strings (e.g., "A -> B")
+   */
+  public List<String> getEdges() {
+    List<String> edgeStrings = new ArrayList<>();
+
+    for (DefaultEdge edge : graph.edgeSet()) {
+      String source = graph.getEdgeSource(edge);
+      String target = graph.getEdgeTarget(edge);
+      edgeStrings.add(source + " -> " + target);
+    }
+
+    return edgeStrings;
+  }
+
+  /**
+   * @deprecated Use DOTRenderer directly instead
+   */
+  @Deprecated
+  public void outputDOTGraph(String filepath) throws IOException {
+    dotRenderer.render(this, filepath);
+  }
+
+  /**
+   * Legacy method for compatibility with tests
+   * @deprecated Use DOTRenderer directly instead
+   */
+  @Deprecated
+  public void outputGraph(String outputPath) throws IOException {
+    outputDOTGraph(outputPath);
+  }
+
+  /**
+   * @deprecated Use GraphvizRenderer directly instead
+   */
+  @Deprecated
+  public void outputGraphics(String outputPath, String format) throws IOException {
+    if ("png".equalsIgnoreCase(format)) {
+      pngRenderer.render(this, outputPath);
+    } else if ("svg".equalsIgnoreCase(format)) {
+      svgRenderer.render(this, outputPath);
+    } else {
+      throw new IllegalArgumentException("Unsupported format: " + format);
+    }
+  }
+
+  /**
+   * Remove a node from the graph
+   *
+   * @param label Label of the node to remove
+   * @return true if node was removed
+   * @throws IllegalArgumentException if the node doesn't exist or has edges
+   *                                  connected to it
+   */
+  public boolean removeNode(String label) {
+    // Check if node exists
+    if (!graph.containsVertex(label)) {
+      throw new IllegalArgumentException("Node doesn't exist: " + label);
+    }
+
+    // Check if node has any edges
+    if (graph.inDegreeOf(label) > 0 || graph.outDegreeOf(label) > 0) {
+      throw new IllegalArgumentException("Cannot remove node with connected edges: " + label);
+    }
+
+    // Remove node
+    return graph.removeVertex(label);
+  }
+
+  /**
+   * Remove multiple nodes from the graph
+   *
+   * @param labels Array of node labels to remove
+   * @throws IllegalArgumentException if any node doesn't exist or has edges
+   *                                  connected to it
+   */
+  public void removeNodes(String[] labels) {
+    for (String label : labels) {
+      removeNode(label);
+    }
+  }
+
+  /**
+   * Remove an edge from the graph
+   *
+   * @param srcLabel Label of the source node
+   * @param dstLabel Label of the destination node
+   * @return true if edge was removed
+   * @throws IllegalArgumentException if either node doesn't exist or the edge
+   *                                  doesn't exist
+   */
+  public boolean removeEdge(String srcLabel, String dstLabel) {
+    // Check if nodes exist
+    if (!graph.containsVertex(srcLabel)) {
+      throw new IllegalArgumentException("Source node doesn't exist: " + srcLabel);
+    }
+    if (!graph.containsVertex(dstLabel)) {
+      throw new IllegalArgumentException("Destination node doesn't exist: " + dstLabel);
+    }
+
+    // Check if edge exists
+    if (!graph.containsEdge(srcLabel, dstLabel)) {
+      throw new IllegalArgumentException("Edge doesn't exist: " + srcLabel + " -> " + dstLabel);
+    }
+
+    // Remove edge
+    DefaultEdge edge = graph.getEdge(srcLabel, dstLabel);
+    return graph.removeEdge(edge);
+  }
+
+  /**
+   * @deprecated Use GraphSearchService.findPath instead
+   */
+  @Deprecated
+  public Path graphSearch(String startNode, String endNode, Algorithm algorithm) {
+    return searchService.findPath(this, startNode, endNode, algorithm);
+  }
+
+  /**
+   * @deprecated Use GraphSearchService.findPath instead
+   */
+  @Deprecated
+  public Path graphSearch(String startNode, String endNode) {
+    return searchService.findPath(this, startNode, endNode);
+  }
+
+  /**
+   * Get a string representation of the graph
+   *
+   * @return String representation
+   */
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Graph:\n");
+    sb.append("Number of nodes: ").append(getNodeCount()).append("\n");
+    sb.append("Nodes: ").append(getNodes()).append("\n");
+    sb.append("Number of edges: ").append(getEdgeCount()).append("\n");
+    sb.append("Edges:\n");
+
+    for (String edge : getEdges()) {
+      sb.append("  ").append(edge).append("\n");
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Check if a node exists in the graph
+   *
+   * @param label Node label to check
+   * @return true if the node exists
+   */
+  public boolean containsNode(String label) {
+    return graph.containsVertex(label);
+  }
+}
+</file>
+
+<file path="core/Path.java">
+package com.shivenshekar.graphparser.core;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Class to represent a path in a graph
+ * Represents a path like n1 -> n2 -> n3
+ */
+public class Path {
+
+  private List<String> nodes;
+  private String startNode;
+  private String endNode;
+
+  /**
+   * Create an empty path with no defined start or end nodes
+   * This is used when constructing paths programmatically
+   */
+  public Path() {
+    this.nodes = new ArrayList<>();
+    this.startNode = null;
+    this.endNode = null;
+  }
+
+  /**
+   * Create a path with specified start and end nodes
+   *
+   * @param startNode Start node of the path
+   * @param endNode End node of the path
+   */
+  public Path(String startNode, String endNode) {
+    this.nodes = new ArrayList<>();
+    this.startNode = startNode;
+    this.endNode = endNode;
+  }
+
+  /**
+   * Create a path from a list of nodes
+   *
+   * @param nodes List of node labels in order of traversal
+   */
+  public Path(List<String> nodes) {
+    this.nodes = new ArrayList<>(nodes);
+    if (!nodes.isEmpty()) {
+      this.startNode = nodes.get(0);
+      this.endNode = nodes.get(nodes.size() - 1);
+    }
+  }
+
+  /**
+   * Add a node to the end of the path
+   *
+   * @param node Label of the node to add
+   */
+  public void addNode(String node) {
+    nodes.add(node);
+    // Update start/end nodes if this is the first node or a new end
+    if (nodes.size() == 1) {
+      this.startNode = node;
+    }
+    this.endNode = node;
+  }
+
+  /**
+   * Get all nodes in the path
+   *
+   * @return Unmodifiable list of nodes in the path
+   */
+  public List<String> getNodes() {
+    return Collections.unmodifiableList(nodes);
+  }
+
+  /**
+   * Get the first node in the path
+   *
+   * @return Label of the first node
+   * @throws IllegalStateException if the path is empty
+   */
+  public String getStartNode() {
+    if (nodes.isEmpty()) {
+      throw new IllegalStateException("Path is empty");
+    }
+    return nodes.get(0);
+  }
+
+  /**
+   * Get the last node in the path
+   *
+   * @return Label of the last node
+   * @throws IllegalStateException if the path is empty
+   */
+  public String getEndNode() {
+    if (nodes.isEmpty()) {
+      throw new IllegalStateException("Path is empty");
+    }
+    return nodes.get(nodes.size() - 1);
+  }
+
+  /**
+   * Get the length of the path (number of edges)
+   *
+   * @return Number of edges in the path (nodes - 1)
+   */
+  public int getLength() {
+    return Math.max(0, nodes.size() - 1);
+  }
+
+  /**
+   * Check if the path is empty
+   *
+   * @return true if the path has no nodes
+   */
+  public boolean isEmpty() {
+    return nodes.isEmpty();
+  }
+
+  /**
+   * Create a copy of this path
+   *
+   * @return A new Path instance with the same nodes
+   */
+  public Path copy() {
+    return new Path(new ArrayList<>(this.nodes));
+  }
+
+  @Override
+  public String toString() {
+    if (nodes.isEmpty()) {
+      return "Empty path";
+    }
+
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < nodes.size(); i++) {
+      sb.append(nodes.get(i));
+      if (i < nodes.size() - 1) {
+        sb.append(" -> ");
+      }
+    }
+    return sb.toString();
+  }
+}
+</file>
+
+<file path="demo/Main.java">
+package com.shivenshekar.graphparser.demo;
+
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.io.DOTRenderer;
+import com.shivenshekar.graphparser.io.GraphvizRenderer;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+
+public class Main {
+  public static void main(String[] args) {
+    try {
+      String inputPath = "src/main/resources/sample.dot";
+
+      System.out.println("Parsing graph from: " + inputPath);
+      Graph graph = Graph.parseGraph(inputPath);
+
+      System.out.println(graph);
+
+      // Use the new DOTRenderer
+      String outputPath = "output.dot";
+      DOTRenderer dotRenderer = new DOTRenderer();
+      dotRenderer.render(graph, outputPath);
+      System.out.println("Graph output to: " + Paths.get(outputPath).toAbsolutePath());
+
+      // Try the GraphvizRenderer too
+      String pngOutputPath = "output.png";
+      GraphvizRenderer pngRenderer = new GraphvizRenderer("png");
+      pngRenderer.render(graph, pngOutputPath);
+      System.out.println("PNG image output to: " + Paths.get(pngOutputPath).toAbsolutePath());
+
+    } catch (IOException e) {
+      System.err.println("Error: " + e.getMessage());
+    }
+  }
+}
+</file>
+
+<file path="demo/RandomWalkDemo.java">
+package com.shivenshekar.graphparser.demo;
+
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+
+import java.io.IOException;
+import java.nio.file.Files;
+// Import Path as FilePath using a full reference
+import java.nio.file.Paths;
+
+public class RandomWalkDemo {
+
+    public static void main(String[] args) {
+        try {
+            // Create a demo graph file if it doesn't exist
+            String dotFilePath = "random_walk_demo.dot";
+            java.nio.file.Path dotFile = Paths.get(dotFilePath);  // Use full qualification
+
+            if (!Files.exists(dotFile)) {
+                String dotContent = "digraph G {\n" +
+                        "    a;\n" +
+                        "    b;\n" +
+                        "    c;\n" +
+                        "    d;\n" +
+                        "    e;\n" +
+                        "    f;\n" +
+                        "    g;\n" +
+                        "    h;\n" +
+                        "    a -> b;\n" +
+                        "    b -> c;\n" +
+                        "    a -> e;\n" +
+                        "    e -> f;\n" +
+                        "    e -> g;\n" +
+                        "    g -> h;\n" +
+                        "}";
+                Files.writeString(dotFile, dotContent);
+                System.out.println("Created demo graph file: " + dotFile.toAbsolutePath());
+            }
+
+            // Parse the graph
+            Graph graph = Graph.parseGraph(dotFilePath);
+            System.out.println("Parsed graph with " + graph.getNodeCount() + " nodes and " +
+                    graph.getEdgeCount() + " edges");
+
+            // Run multiple random walk searches to demonstrate randomness
+            System.out.println("\nRunning multiple random walk searches from 'a' to 'c'...\n");
+
+            for (int i = 0; i < 3; i++) {
+                System.out.println("Search attempt #" + (i+1) + ":");
+                // Use a different variable name for our custom Path
+                Path graphPath = graph.graphSearch("a", "c", Algorithm.RANDOM);
+
+                if (graphPath != null) {
+                    System.out.println("Path found: " + graphPath);
+                } else {
+                    System.out.println("No path found in this attempt");
+                }
+                System.out.println();
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+}
+</file>
+
+<file path="demo/SearchDemo.java">
+package com.shivenshekar.graphparser.demo;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+import com.shivenshekar.graphparser.algorithm.RandomWalkAlgorithm;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+import org.jgrapht.graph.DefaultEdge;
+
+/*
+* Scheme A being used for outputting format
+* Graph file already set from TA input file
+*
+* */
+
+
+public class SearchDemo {
+
+    public static void main(String[] args) {
+        try {
+            // Create the demo graph file with the specified structure
+            String dotFilePath = "demo_graph.dot";
+            String dotContent = "digraph {\n" +
+                    "    a -> b;\n" +
+                    "    b -> c;\n" +
+                    "    c -> d;\n" +
+                    "    d -> a;\n" +
+                    "    a -> e;\n" +
+                    "    e -> f;\n" +
+                    "    e -> g;\n" +
+                    "    f -> h;\n" +
+                    "    g -> h;\n" +
+                    "}";
+            Files.writeString(Paths.get(dotFilePath), dotContent);
+            System.out.println("Created demo graph file: " + dotFilePath);
+
+            // Parse the graph
+            Graph graph = Graph.parseGraph(dotFilePath);
+            System.out.println("Parsed graph with " + graph.getNodeCount() + " nodes and " +
+                    graph.getEdgeCount() + " edges");
+
+            // Demonstrate BFS with path tracing (Scheme A)
+            System.out.println("\n=== BFS Demonstration (Scheme A) ===\n");
+            Path bfsPath = demonstrateBFS(graph, "a", "c");
+            if (bfsPath != null) {
+                System.out.println(formatPathForSchemeA(bfsPath));
+            } else {
+                System.out.println("No path found using BFS.");
+            }
+
+            // Demonstrate DFS with path tracing (Scheme A)
+            System.out.println("\n=== DFS Demonstration (Scheme A) ===\n");
+            Path dfsPath = demonstrateDFS(graph, "a", "c");
+            if (dfsPath != null) {
+                System.out.println(formatPathForSchemeA(dfsPath));
+            } else {
+                System.out.println("No path found using DFS.");
+            }
+
+            // Demonstrate Random Walk
+            System.out.println("\n=== Random Walk Demonstration ===\n");
+            demonstrateRandomWalk(graph, "a", "h");
+
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    // Custom BFS implementation that prints visited paths
+    private static Path demonstrateBFS(Graph graph, String srcLabel, String dstLabel) {
+        // Set to track visited nodes
+        Set<String> visited = new HashSet<>();
+        // Queue to track nodes to visit
+        Queue<Path> queue = new LinkedList<>();
+
+        // Initialize path with source node
+        Path initialPath = new Path();
+        initialPath.addNode(srcLabel);
+        queue.add(initialPath);
+        visited.add(srcLabel);
+
+        System.out.println("visiting " + formatPathForSchemeA(initialPath));
+
+        // BFS traversal
+        while (!queue.isEmpty()) {
+            Path currentPath = queue.poll();
+            String currentNode = currentPath.getEndNode();
+
+            // Get neighbors (outgoing edges)
+            for (DefaultEdge edge : graph.getOutgoingEdges(currentNode)) {
+                String neighbor = graph.getEdgeTarget(edge);
+
+                // If we found the destination, return the path
+                if (neighbor.equals(dstLabel)) {
+                    Path foundPath = currentPath.copy();
+                    foundPath.addNode(neighbor);
+                    return foundPath;
+                }
+
+                // If neighbor hasn't been visited, add it to the queue
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    Path newPath = currentPath.copy();
+                    newPath.addNode(neighbor);
+                    System.out.println("visiting " + formatPathForSchemeA(newPath));
+                    queue.add(newPath);
+                }
+            }
+        }
+
+        // No path found
+        return null;
+    }
+
+    // Custom DFS implementation that prints visited paths
+    private static Path demonstrateDFS(Graph graph, String srcLabel, String dstLabel) {
+        // Set to track visited nodes
+        Set<String> visited = new HashSet<>();
+
+        // Start DFS from source node
+        Path initialPath = new Path();
+        initialPath.addNode(srcLabel);
+        System.out.println("visiting " + formatPathForSchemeA(initialPath));
+
+        return dfsRecursive(graph, srcLabel, dstLabel, visited, initialPath);
+    }
+
+    private static Path dfsRecursive(
+        Graph graph,
+        String currentNode,
+        String dstLabel,
+        Set<String> visited,
+        Path path
+    ) {
+        // Mark current node as visited
+        visited.add(currentNode);
+
+        // If we reached the destination, return the path
+        if (currentNode.equals(dstLabel)) {
+            return path;
+        }
+
+        // Visit all neighbors
+        for (DefaultEdge edge : graph.getOutgoingEdges(currentNode)) {
+            String neighbor = graph.getEdgeTarget(edge);
+
+            if (!visited.contains(neighbor)) {
+                // Add neighbor to path
+                Path newPath = path.copy();
+                newPath.addNode(neighbor);
+                System.out.println("visiting " + formatPathForSchemeA(newPath));
+
+                // Recursively visit neighbor
+                Path resultPath = dfsRecursive(graph, neighbor, dstLabel, visited, newPath);
+                if (resultPath != null) {
+                    return resultPath;
+                }
+            }
+        }
+
+        // No path found from this node
+        return null;
+    }
+
+    // Demonstrate Random Walk with multiple attempts
+    private static void demonstrateRandomWalk(Graph graph, String startNode, String endNode) {
+        System.out.println("Random Walk from " + startNode + " to " + endNode + ":");
+
+        List<Path> successfulPaths = new ArrayList<>();
+        int requiredAttempts = 5;
+        int maxAttempts = 20;  // Set a reasonable upper limit
+
+        // Run random walk multiple times
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            // Create a random walk algorithm with fixed seed for reproducibility
+            RandomWalkAlgorithm randomWalk = new RandomWalkAlgorithm(
+                1000, // maxSteps
+                0.3,  // backtrackProbability
+                false, // verbose - we'll handle output manually
+                new Random(System.nanoTime() + attempt) // random seed
+            );
+
+            // Run the search
+            Path result = randomWalk.findPath(graph, startNode, endNode);
+
+            // Format and print the result
+            StringBuilder pathStr = new StringBuilder("Attempt " + attempt + ": ");
+            if (result != null) {
+                pathStr.append(formatPathForDisplay(result));
+                pathStr.append(" (target node!)");
+
+                // Check if this is a new path
+                boolean isNewPath = true;
+                for (Path existingPath : successfulPaths) {
+                    if (pathsEqual(existingPath, result)) {
+                        isNewPath = false;
+                        break;
+                    }
+                }
+
+                if (isNewPath) {
+                    successfulPaths.add(result);
+                }
+            } else {
+                pathStr.append("(Dead end)");
+            }
+            System.out.println(pathStr.toString());
+
+            // Check if we have at least 2 different paths and at least 5 attempts
+            if (successfulPaths.size() >= 2 && attempt >= requiredAttempts) {
+                break;
+            }
+        }
+
+        // Summarize results
+        System.out.println("\nRandom Walk Summary:");
+        System.out.println("Found " + successfulPaths.size() + " different successful paths out of at least " +
+                          requiredAttempts + " attempts.");
+        for (int i = 0; i < successfulPaths.size(); i++) {
+            System.out.println((i + 1) + ": " + formatPathForDisplay(successfulPaths.get(i)));
+        }
+    }
+
+    // Helper method to compare paths
+    private static boolean pathsEqual(Path path1, Path path2) {
+        if (path1.getLength() != path2.getLength()) {
+            return false;
+        }
+
+        List<String> nodes1 = path1.getNodes();
+        List<String> nodes2 = path2.getNodes();
+
+        return nodes1.equals(nodes2);
+    }
+
+    // Helper to format path for display (Random Walk)
+    private static String formatPathForDisplay(Path path) {
+        List<String> nodes = path.getNodes();
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < nodes.size(); i++) {
+            sb.append(nodes.get(i));
+            if (i < nodes.size() - 1) {
+                sb.append("->");
+            }
+        }
+
+        return sb.toString();
+    }
+
+    // Format paths according to Scheme A format (for BFS and DFS)
+    private static String formatPathForSchemeA(Path path) {
+        StringBuilder sb = new StringBuilder("Path{nodes=[");
+
+        List<String> nodes = path.getNodes();
+        for (int i = 0; i < nodes.size(); i++) {
+            sb.append("Node{").append(nodes.get(i)).append("}");
+            if (i < nodes.size() - 1) {
+                sb.append(", ");
+            }
+        }
+
+        sb.append("]}");
+        return sb.toString();
+    }
+}
+</file>
+
+<file path="io/DOTRenderer.java">
+package com.shivenshekar.graphparser.io;
+
+import com.shivenshekar.graphparser.core.Graph;
+import org.jgrapht.graph.DefaultEdge;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
+/**
+ * Renders a graph in DOT format
+ */
+public class DOTRenderer implements GraphRenderer {
+    @Override
+    public void render(Graph graph, String outputPath) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath))) {
+            writer.write("digraph G {\n");
+
+            // Write all nodes
+            for (String node : graph.getNodes()) {
+                writer.write("    " + node + ";\n");
+            }
+
+            // Write all edges
+            for (String edge : graph.getEdges()) {
+                String[] parts = edge.split(" -> ");
+                writer.write("    " + parts[0] + " -> " + parts[1] + ";\n");
+            }
+
+            writer.write("}");
+        }
+    }
+}
+</file>
+
+<file path="io/GraphRenderer.java">
+package com.shivenshekar.graphparser.io;
+
+import com.shivenshekar.graphparser.core.Graph;
+import java.io.IOException;
+
+/**
+ * Interface for rendering a graph in different formats
+ */
+public interface GraphRenderer {
+    /**
+     * Render a graph to a file
+     * @param graph The graph to render
+     * @param outputPath Path to the output file
+     * @throws IOException If the file cannot be written
+     */
+    void render(Graph graph, String outputPath) throws IOException;
+}
+</file>
+
+<file path="io/GraphvizRenderer.java">
+package com.shivenshekar.graphparser.io;
+
+import com.shivenshekar.graphparser.core.Graph;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.model.MutableGraph;
+import guru.nidi.graphviz.parse.Parser;
+
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * Renders a graph using Graphviz in various image formats
+ */
+public class GraphvizRenderer implements GraphRenderer {
+    private final Format format;
+
+    public GraphvizRenderer(String formatName) {
+        switch (formatName.toLowerCase()) {
+            case "png":
+                this.format = Format.PNG;
+                break;
+            case "svg":
+                this.format = Format.SVG;
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported format: " + formatName);
+        }
+    }
+
+    @Override
+    public void render(Graph graph, String outputPath) throws IOException {
+        // Create temporary DOT file
+        File tempFile = File.createTempFile("graph_", ".dot");
+        new DOTRenderer().render(graph, tempFile.getAbsolutePath());
+
+        try {
+            // Generate the graphical output
+            MutableGraph g = new Parser().read(tempFile);
+            Graphviz.fromGraph(g).width(700).render(format).toFile(new File(outputPath));
+        } finally {
+            // Clean up temporary file
+            tempFile.delete();
+        }
+    }
+}
+</file>
+
+<file path="parser/DOTParser.java">
+package com.shivenshekar.graphparser.parser;
+
+import com.shivenshekar.graphparser.core.Graph;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DOTParser {
+    /**
+     * Parse a DOT graph file and create a graph
+     *
+     * @param filepath Path to the DOT file
+     * @return Graph instance containing the parsed graph
+     * @throws IOException If file not found or couldn't be read
+     */
+    public static Graph parseGraph(String filepath) throws IOException {
+        Graph graph = new Graph();
+
+        java.nio.file.Path path = Paths.get(filepath);
+        List<String> lines = Files.readAllLines(path);
+
+        // Parse the DOT file content
+        GraphContent content = parseDotContent(lines);
+
+        // Add nodes to the graph
+        for (String node : content.nodes) {
+            graph.addNode(node);
+        }
+
+        // Add edges to the graph
+        for (String[] edge : content.edges) {
+            graph.addEdge(edge[0], edge[1]);
+        }
+
+        return graph;
+    }
+
+    /**
+     * Parse DOT file content into graph components
+     *
+     * @param lines Lines from the DOT file
+     * @return GraphContent containing nodes and edges
+     */
+    private static GraphContent parseDotContent(List<String> lines) {
+        boolean inGraph = false;
+        List<String> nodes = new ArrayList<>();
+        List<String[]> edges = new ArrayList<>();
+
+        for (String line : lines) {
+            line = line.trim();
+
+            // Skip comments and empty lines
+            if (line.startsWith("//") || line.startsWith("#") || line.isEmpty()) {
+                continue;
+            }
+
+            // Determine if we're entering or exiting the graph definition
+            if (line.contains("{")) {
+                inGraph = true;
+                continue;
+            } else if (line.contains("}")) {
+                inGraph = false;
+                continue;
+            }
+
+            // Process content if we're inside the graph definition
+            if (inGraph) {
+                if (line.contains("->") || line.contains("--")) {
+                    // Process edge definition
+                    String[] edgeData = parseEdge(line);
+                    if (edgeData != null) {
+                        edges.add(edgeData);
+
+                        // Add nodes from the edge if they don't exist
+                        if (!nodes.contains(edgeData[0])) {
+                            nodes.add(edgeData[0]);
+                        }
+                        if (!nodes.contains(edgeData[1])) {
+                            nodes.add(edgeData[1]);
+                        }
+                    }
+                } else if (!isGraphMetadata(line)) {
+                    // Process node definition
+                    String node = parseNode(line);
+                    if (node != null && !node.isEmpty() && !nodes.contains(node)) {
+                        nodes.add(node);
+                    }
+                }
+            }
+        }
+
+        return new GraphContent(nodes, edges);
+    }
+
+    /**
+     * Parse an edge definition line
+     *
+     * @param line Line containing edge definition
+     * @return Array with [source, target] or null if invalid
+     */
+    private static String[] parseEdge(String line) {
+        String[] parts;
+        if (line.contains("->")) {
+            parts = line.split("->");
+        } else {
+            parts = line.split("--");
+        }
+
+        if (parts.length >= 2) {
+            String source = parts[0].trim();
+            String target = parts[1].trim();
+
+            // Remove attributes
+            if (source.contains("[")) {
+                source = source.substring(0, source.indexOf("[")).trim();
+            }
+            if (target.contains("[")) {
+                target = target.substring(0, target.indexOf("[")).trim();
+            }
+
+            // Remove semicolons
+            if (target.endsWith(";")) {
+                target = target.substring(0, target.length() - 1).trim();
+            }
+
+            return new String[] { source, target };
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse a node definition line
+     *
+     * @param line Line containing node definition
+     * @return Node label or null if invalid
+     */
+    private static String parseNode(String line) {
+        String node = line;
+
+        // Remove attributes
+        if (node.contains("[")) {
+            node = node.substring(0, node.indexOf("[")).trim();
+        }
+
+        // Remove semicolons
+        if (node.endsWith(";")) {
+            node = node.substring(0, node.length() - 1).trim();
+        }
+
+        return node;
+    }
+
+    /**
+     * Check if a line contains graph metadata rather than node/edge definitions
+     *
+     * @param line Line to check
+     * @return true if the line contains graph metadata
+     */
+    private static boolean isGraphMetadata(String line) {
+        return line.contains("=") ||
+                line.contains("subgraph") ||
+                line.contains("graph") ||
+                line.contains("digraph");
+    }
+
+    /**
+     * Inner class to hold parsed graph content
+     */
+    public static class GraphContent {
+        public final List<String> nodes;
+        public final List<String[]> edges;
+
+        public GraphContent(List<String> nodes, List<String[]> edges) {
+            this.nodes = nodes;
+            this.edges = edges;
+        }
+    }
+}
+</file>
+
+<file path="search/GraphSearchService.java">
+package com.shivenshekar.graphparser.search;
+
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+
+/**
+ * Service class for graph search operations
+ */
+public class GraphSearchService {
+    private final SearchContext searchContext = new SearchContext();
+
+    /**
+     * Search for a path between two nodes using the specified algorithm
+     *
+     * @param graph The graph to search in
+     * @param startNode Start node label
+     * @param endNode End node label
+     * @param algorithm Algorithm to use (BFS, DFS, RANDOM)
+     * @return Path if found, null if no path exists
+     * @throws IllegalArgumentException if nodes don't exist
+     */
+    public Path findPath(Graph graph, String startNode, String endNode, Algorithm algorithm) {
+        // Check if nodes exist
+        if (!graph.containsNode(startNode)) {
+            throw new IllegalArgumentException("Source node doesn't exist: " + startNode);
+        }
+        if (!graph.containsNode(endNode)) {
+            throw new IllegalArgumentException("Destination node doesn't exist: " + endNode);
+        }
+
+        // If start and end are the same, return a path with just that node
+        if (startNode.equals(endNode)) {
+            Path path = new Path();
+            path.addNode(startNode);
+            return path;
+        }
+
+        // Use strategy context to set and execute the algorithm
+        searchContext.setAlgorithm(algorithm);
+        return searchContext.executeSearch(graph, startNode, endNode);
+    }
+
+    /**
+     * Search for a path using BFS (default algorithm)
+     *
+     * @param graph The graph to search in
+     * @param startNode Start node label
+     * @param endNode End node label
+     * @return Path if found, null if no path exists
+     */
+    public Path findPath(Graph graph, String startNode, String endNode) {
+        return findPath(graph, startNode, endNode, Algorithm.BFS);
+    }
+}
+</file>
+
+<file path="search/SearchContext.java">
+package com.shivenshekar.graphparser.search;
+
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.algorithm.BFSAlgorithm;
+import com.shivenshekar.graphparser.algorithm.DFSAlgorithm;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+import com.shivenshekar.graphparser.algorithm.RandomWalkAlgorithm;
+
+/**
+ * Context class for the Strategy Pattern
+ */
+public class SearchContext {
+    private SearchStrategy strategy;
+
+    /**
+     * Set strategy based on algorithm type
+     * @param algo Algorithm enum value
+     */
+    public void setAlgorithm(Algorithm algo) {
+        switch (algo) {
+            case BFS:
+                this.strategy = new BFSAlgorithm();
+                break;
+            case DFS:
+                this.strategy = new DFSAlgorithm();
+                break;
+            case RANDOM:
+                this.strategy = new RandomWalkAlgorithm();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported algorithm: " + algo);
+        }
+    }
+
+    /**
+     * Set a specific strategy
+     * @param strategy The search strategy to use
+     */
+    public void setStrategy(SearchStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    /**
+     * Execute the selected search strategy
+     * @param graph The graph to search in
+     * @param srcLabel Source node label
+     * @param dstLabel Destination node label
+     * @return A Path object if a path exists, null otherwise
+     */
+    public Path executeSearch(Graph graph, String srcLabel, String dstLabel) {
+        if (strategy == null) {
+            throw new IllegalStateException("Search strategy not set");
+        }
+        return strategy.findPath(graph, srcLabel, dstLabel);
+    }
+}
+</file>
+
+<file path="search/SearchStrategy.java">
+package com.shivenshekar.graphparser.search;
+
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+
+/**
+ * Strategy interface for graph search algorithms
+ */
+public interface SearchStrategy {
+    /**
+     * Find a path from source to destination
+     * @param graph The graph to search in
+     * @param srcLabel Source node label
+     * @param dstLabel Destination node label
+     * @return A Path object if a path exists, null otherwise
+     */
+    Path findPath(Graph graph, String srcLabel, String dstLabel);
+}
+</file>
+
+</files>
