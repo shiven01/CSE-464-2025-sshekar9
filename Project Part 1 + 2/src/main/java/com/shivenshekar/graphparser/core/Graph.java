@@ -1,6 +1,8 @@
 package com.shivenshekar.graphparser.core;
 
 import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.io.DOTRenderer;
+import com.shivenshekar.graphparser.io.GraphvizRenderer;
 import com.shivenshekar.graphparser.parser.DOTParser;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
@@ -25,6 +27,9 @@ public class Graph {
   private DefaultDirectedGraph<String, DefaultEdge> graph;
   private final SearchContext searchContext = new SearchContext();
   private Map<String, String> nodeLabels;
+  private final DOTRenderer dotRenderer = new DOTRenderer();
+  private final GraphvizRenderer pngRenderer = new GraphvizRenderer("png");
+  private final GraphvizRenderer svgRenderer = new GraphvizRenderer("svg");
 
   public Graph() {
     this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
@@ -165,72 +170,33 @@ public class Graph {
   }
 
   /**
-   * Output the graph to a DOT file
-   *
-   * @param filepath Path to output file
-   * @throws IOException If file couldn't be written
+   * @deprecated Use DOTRenderer directly instead
    */
+  @Deprecated
   public void outputDOTGraph(String filepath) throws IOException {
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))) {
-      writer.write("digraph G {\n");
-
-      // Write all nodes
-      for (String node : graph.vertexSet()) {
-        writer.write("    " + node + ";\n");
-      }
-
-      // Write all edges
-      for (DefaultEdge edge : graph.edgeSet()) {
-        String source = graph.getEdgeSource(edge);
-        String target = graph.getEdgeTarget(edge);
-        writer.write("    " + source + " -> " + target + ";\n");
-      }
-
-      writer.write("}");
-    }
+    dotRenderer.render(this, filepath);
   }
 
   /**
    * Legacy method for compatibility with tests
-   * @param outputPath Path to output file
-   * @throws IOException If file couldn't be written
+   * @deprecated Use DOTRenderer directly instead
    */
+  @Deprecated
   public void outputGraph(String outputPath) throws IOException {
     outputDOTGraph(outputPath);
   }
 
   /**
-   * Generate a graphical representation of the graph
-   *
-   * @param outputPath Path to output file
-   * @param format Format to use (png, svg)
-   * @throws IOException If file couldn't be written
+   * @deprecated Use GraphvizRenderer directly instead
    */
+  @Deprecated
   public void outputGraphics(String outputPath, String format) throws IOException {
-    // Create temporary DOT file
-    File tempFile = File.createTempFile("graph_", ".dot");
-    outputDOTGraph(tempFile.getAbsolutePath());
-
-    // Determine the output format
-    Format outputFormat;
-    switch (format.toLowerCase()) {
-      case "png":
-        outputFormat = Format.PNG;
-        break;
-      case "svg":
-        outputFormat = Format.SVG;
-        break;
-      default:
-        throw new IllegalArgumentException("Unsupported format: " + format);
-    }
-
-    // Generate the graphical output
-    try {
-      MutableGraph g = new Parser().read(tempFile);
-      Graphviz.fromGraph(g).width(700).render(outputFormat).toFile(new File(outputPath));
-    } finally {
-      // Clean up temporary file
-      tempFile.delete();
+    if ("png".equalsIgnoreCase(format)) {
+      pngRenderer.render(this, outputPath);
+    } else if ("svg".equalsIgnoreCase(format)) {
+      svgRenderer.render(this, outputPath);
+    } else {
+      throw new IllegalArgumentException("Unsupported format: " + format);
     }
   }
 
