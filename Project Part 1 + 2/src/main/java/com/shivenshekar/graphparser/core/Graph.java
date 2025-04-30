@@ -4,6 +4,7 @@ import com.shivenshekar.graphparser.algorithm.Algorithm;
 import com.shivenshekar.graphparser.io.DOTRenderer;
 import com.shivenshekar.graphparser.io.GraphvizRenderer;
 import com.shivenshekar.graphparser.parser.DOTParser;
+import com.shivenshekar.graphparser.search.GraphSearchService;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.MutableGraph;
@@ -30,6 +31,7 @@ public class Graph {
   private final DOTRenderer dotRenderer = new DOTRenderer();
   private final GraphvizRenderer pngRenderer = new GraphvizRenderer("png");
   private final GraphvizRenderer svgRenderer = new GraphvizRenderer("svg");
+  private final GraphSearchService searchService = new GraphSearchService();
 
   public Graph() {
     this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
@@ -265,43 +267,19 @@ public class Graph {
   }
 
   /**
-   * Search for a path between two nodes using the specified algorithm
-   *
-   * @param startNode Start node label
-   * @param endNode End node label
-   * @param algorithm Algorithm to use (BFS, DFS, RANDOM)
-   * @return Path if found, null if no path exists
+   * @deprecated Use GraphSearchService.findPath instead
    */
+  @Deprecated
   public Path graphSearch(String startNode, String endNode, Algorithm algorithm) {
-    // Check if nodes exist
-    if (!graph.containsVertex(startNode)) {
-      throw new IllegalArgumentException("Source node doesn't exist: " + startNode);
-    }
-    if (!graph.containsVertex(endNode)) {
-      throw new IllegalArgumentException("Destination node doesn't exist: " + endNode);
-    }
-
-    // If start and end are the same, return a path with just that node
-    if (startNode.equals(endNode)) {
-      Path path = new Path();
-      path.addNode(startNode);
-      return path;
-    }
-
-    // Use strategy context to set and execute the algorithm
-    searchContext.setAlgorithm(algorithm);
-    return searchContext.executeSearch(this, startNode, endNode);
+    return searchService.findPath(this, startNode, endNode, algorithm);
   }
 
   /**
-   * Search for a path using BFS (default algorithm)
-   *
-   * @param startNode Start node label
-   * @param endNode End node label
-   * @return Path if found, null if no path exists
+   * @deprecated Use GraphSearchService.findPath instead
    */
+  @Deprecated
   public Path graphSearch(String startNode, String endNode) {
-    return graphSearch(startNode, endNode, Algorithm.BFS);
+    return searchService.findPath(this, startNode, endNode);
   }
 
   /**
@@ -323,5 +301,15 @@ public class Graph {
     }
 
     return sb.toString();
+  }
+
+  /**
+   * Check if a node exists in the graph
+   *
+   * @param label Node label to check
+   * @return true if the node exists
+   */
+  public boolean containsNode(String label) {
+    return graph.containsVertex(label);
   }
 }
