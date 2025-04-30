@@ -1,4 +1,4 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.algorithm;
 
 /**
  * Enum to represent graph search algorithms

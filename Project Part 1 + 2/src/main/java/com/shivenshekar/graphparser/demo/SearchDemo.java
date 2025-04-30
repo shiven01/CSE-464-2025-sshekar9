@@ -1,10 +1,21 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.demo;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+
+import com.shivenshekar.graphparser.algorithm.RandomWalkAlgorithm;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
 import org.jgrapht.graph.DefaultEdge;
+
+/*
+* Scheme A being used for outputting format
+* Graph file already set from TA input file
+*
+* */
+
 
 public class SearchDemo {
 

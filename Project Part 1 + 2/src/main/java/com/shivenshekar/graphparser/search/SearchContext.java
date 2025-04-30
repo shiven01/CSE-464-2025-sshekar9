@@ -1,11 +1,11 @@
 package com.shivenshekar.graphparser.search;
 
-import com.shivenshekar.graphparser.Algorithm;
-import com.shivenshekar.graphparser.BFSAlgorithm;
-import com.shivenshekar.graphparser.DFSAlgorithm;
-import com.shivenshekar.graphparser.Graph;
-import com.shivenshekar.graphparser.Path;
-import com.shivenshekar.graphparser.RandomWalkAlgorithm;
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.algorithm.BFSAlgorithm;
+import com.shivenshekar.graphparser.algorithm.DFSAlgorithm;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
+import com.shivenshekar.graphparser.algorithm.RandomWalkAlgorithm;
 
 /**
  * Context class for the Strategy Pattern

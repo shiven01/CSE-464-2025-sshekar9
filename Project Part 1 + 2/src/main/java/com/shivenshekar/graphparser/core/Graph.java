@@ -1,5 +1,6 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.core;
 
+import com.shivenshekar.graphparser.algorithm.Algorithm;
 import com.shivenshekar.graphparser.parser.DOTParser;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
@@ -9,21 +10,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
+
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import com.shivenshekar.graphparser.search.SearchContext;
-import com.shivenshekar.graphparser.search.SearchStrategy;
 
 public class Graph {
 

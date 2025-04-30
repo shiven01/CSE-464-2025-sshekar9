@@ -1,4 +1,6 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.demo;
+
+import com.shivenshekar.graphparser.core.Graph;
 
 import java.io.IOException;
 import java.nio.file.Paths;

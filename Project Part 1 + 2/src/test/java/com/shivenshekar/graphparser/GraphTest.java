@@ -6,7 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
+
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.core.Graph;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -223,7 +225,7 @@ class GraphTest {
 
     Graph graph = Graph.parseGraph(searchDotFile.toString());
 
-    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "D", Algorithm.BFS);
+    com.shivenshekar.graphparser.core.Path path = graph.graphSearch("A", "D", Algorithm.BFS);
 
     assertNotNull(path);
     assertFalse(path.isEmpty());
@@ -259,7 +261,7 @@ class GraphTest {
 
     Graph graph = Graph.parseGraph(searchDotFile.toString());
 
-    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "D", Algorithm.DFS);
+    com.shivenshekar.graphparser.core.Path path = graph.graphSearch("A", "D", Algorithm.DFS);
 
     assertNotNull(path);
     assertFalse(path.isEmpty());
@@ -292,7 +294,7 @@ class GraphTest {
     // Since random walk is non-deterministic, we try multiple times
     boolean foundPath = false;
     for (int i = 0; i < 10 && !foundPath; i++) {
-      com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "D", Algorithm.RANDOM);
+      com.shivenshekar.graphparser.core.Path path = graph.graphSearch("A", "D", Algorithm.RANDOM);
 
       if (path != null) {
         foundPath = true;
@@ -310,7 +312,7 @@ class GraphTest {
   void graphSearch_shouldReturnPathWithSingleNodeForSameStartAndEnd() throws IOException {
     Graph graph = Graph.parseGraph(testDotFile.toString());
 
-    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "A", Algorithm.BFS);
+    com.shivenshekar.graphparser.core.Path path = graph.graphSearch("A", "A", Algorithm.BFS);
 
     assertNotNull(path);
     assertFalse(path.isEmpty());
@@ -327,7 +329,7 @@ class GraphTest {
     // Add an isolated node
     graph.addNode("Z");
 
-    com.shivenshekar.graphparser.Path path = graph.graphSearch("A", "Z", Algorithm.BFS);
+    com.shivenshekar.graphparser.core.Path path = graph.graphSearch("A", "Z", Algorithm.BFS);
 
     assertNull(path);
   }

@@ -1,5 +1,7 @@
 package com.shivenshekar.graphparser;
 
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.core.Graph;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -45,7 +47,7 @@ class RandomWalkTest {
         System.out.println("Random Walk Test - Multiple Searches");
 
         for (int i = 0; i < 3; i++) {
-            com.shivenshekar.graphparser.Path path = graph.graphSearch("a", "c", Algorithm.RANDOM);
+            com.shivenshekar.graphparser.core.Path path = graph.graphSearch("a", "c", Algorithm.RANDOM);
 
             // Path may not be found every time due to randomness
             if (path != null) {

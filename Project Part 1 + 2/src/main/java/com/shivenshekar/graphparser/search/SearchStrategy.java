@@ -1,7 +1,7 @@
 package com.shivenshekar.graphparser.search;
 
-import com.shivenshekar.graphparser.Graph;
-import com.shivenshekar.graphparser.Path;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
 
 /**
  * Strategy interface for graph search algorithms

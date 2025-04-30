@@ -1,4 +1,8 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.demo;
+
+import com.shivenshekar.graphparser.algorithm.Algorithm;
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,7 +49,7 @@ public class RandomWalkDemo {
             for (int i = 0; i < 3; i++) {
                 System.out.println("Search attempt #" + (i+1) + ":");
                 // Use a different variable name for our custom Path
-                com.shivenshekar.graphparser.Path graphPath = graph.graphSearch("a", "c", Algorithm.RANDOM);
+                Path graphPath = graph.graphSearch("a", "c", Algorithm.RANDOM);
 
                 if (graphPath != null) {
                     System.out.println("Path found: " + graphPath);

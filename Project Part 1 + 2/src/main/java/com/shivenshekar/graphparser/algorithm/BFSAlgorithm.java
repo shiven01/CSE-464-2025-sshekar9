@@ -1,6 +1,9 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.algorithm;
 
 import java.util.*;
+
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
 import org.jgrapht.graph.DefaultEdge;
 
 /**

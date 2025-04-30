@@ -1,4 +1,4 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.core;
 
 import java.util.ArrayList;
 import java.util.Collections;

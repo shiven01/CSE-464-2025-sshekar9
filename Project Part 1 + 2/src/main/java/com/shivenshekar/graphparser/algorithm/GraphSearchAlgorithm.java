@@ -1,5 +1,7 @@
-package com.shivenshekar.graphparser;
+package com.shivenshekar.graphparser.algorithm;
 
+import com.shivenshekar.graphparser.core.Graph;
+import com.shivenshekar.graphparser.core.Path;
 import com.shivenshekar.graphparser.search.SearchStrategy;
 
 /**
