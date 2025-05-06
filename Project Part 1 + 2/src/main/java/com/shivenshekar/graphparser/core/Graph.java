@@ -43,7 +43,7 @@ public class Graph {
    *
    * @return The internal graph representation
    */
-  DefaultDirectedGraph<String, DefaultEdge> getInternalGraph() {
+  public DefaultDirectedGraph<String, DefaultEdge> getInternalGraph() {
     return this.graph;
   }
 
